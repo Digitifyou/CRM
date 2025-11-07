@@ -1,0 +1,117 @@
+-- Set timezone
+SET TIME_ZONE = '+05:30';
+
+
+CREATE DATABASE IF NOT EXISTS crm_academy DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+
+-- 1. User Management
+CREATE TABLE `users` (
+    `user_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(100) NOT NULL UNIQUE,
+    `password_hash` VARCHAR(255) NOT NULL,
+    `full_name` VARCHAR(150),
+    `role` ENUM('admin', 'owner', 'counselor', 'trainer') NOT NULL DEFAULT 'counselor',
+    `is_active` BOOLEAN DEFAULT TRUE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 2. Courses (Part of Settings)
+CREATE TABLE `courses` (
+    `course_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `course_name` VARCHAR(255) NOT NULL,
+    `standard_fee` DECIMAL(10, 2) NOT NULL,
+    `duration` VARCHAR(100),
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Pipeline Stages (Part of Settings)
+CREATE TABLE `pipeline_stages` (
+    `stage_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `stage_name` VARCHAR(100) NOT NULL,
+    `stage_order` INT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. Batches (Part of Settings)
+CREATE TABLE `batches` (
+    `batch_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `course_id` INT NOT NULL,
+    `batch_name` VARCHAR(255),
+    `start_date` DATE,
+    `total_seats` INT NOT NULL,
+    `filled_seats` INT NOT NULL DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`course_id`) REFERENCES `courses`(`course_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. Student & Lead Module
+CREATE TABLE `students` (
+    `student_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `full_name` VARCHAR(255) NOT NULL,
+    `email` VARCHAR(255) UNIQUE,
+    `phone` VARCHAR(20) NOT NULL UNIQUE,
+    `status` ENUM('inquiry', 'active_student', 'alumni') NOT NULL DEFAULT 'inquiry',
+    `course_interested_id` INT,
+    `lead_source` VARCHAR(100),
+    `qualification` VARCHAR(100),
+    `work_experience` VARCHAR(50),
+    `lead_score` INT DEFAULT 0,
+    `ai_summary` TEXT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`course_interested_id`) REFERENCES `courses`(`course_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 6. Enrollments Module (The "Deal")
+CREATE TABLE `enrollments` (
+    `enrollment_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `student_id` INT NOT NULL,
+    `course_id` INT, -- ALLOWS NULL
+    `assigned_to_user_id` INT NOT NULL,
+    `pipeline_stage_id` INT NOT NULL,
+    `total_fee_agreed` DECIMAL(10, 2) NOT NULL,
+    `total_fee_paid` DECIMAL(10, 2) DEFAULT 0.00,
+    `balance_due` DECIMAL(10, 2) GENERATED ALWAYS AS (`total_fee_agreed` - `total_fee_paid`) STORED,
+    `next_follow_up_date` DATETIME,
+    `status` ENUM('open', 'enrolled', 'lost') NOT NULL DEFAULT 'open',
+    `lost_reason` TEXT,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`course_id`) REFERENCES `courses`(`course_id`) ON DELETE SET NULL, -- THE FIX
+    FOREIGN KEY (`assigned_to_user_id`) REFERENCES `users`(`user_id`),
+    FOREIGN KEY (`pipeline_stage_id`) REFERENCES `pipeline_stages`(`stage_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 7. Activity Log for Students
+CREATE TABLE `activity_log` (
+    `log_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `student_id` INT NOT NULL,
+    `user_id` INT,
+    `activity_type` ENUM('note', 'call', 'email', 'sms', 'status_change') NOT NULL,
+    `content` TEXT NOT NULL,
+    `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`student_id`) REFERENCES `students`(`student_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 8. Integrations (Part of Settings)
+CREATE TABLE `integrations` (
+    `integration_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `platform` ENUM('meta', 'website_form') NOT NULL,
+    `api_key` VARCHAR(255),
+    `app_secret` VARCHAR(255),
+    `form_id` VARCHAR(255),
+    `is_active` BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Insert default admin user (Password: "admin123")
+INSERT INTO `users` (`username`, `password_hash`, `full_name`, `role`) 
+VALUES ('admin', '$2y$10$E.qJ4s5.XG9iulv.w8D2KuBKY64K0y4f6.0fGq.h/E270xflhRDia', 'Admin User', 'admin');
+
+-- Insert default pipeline stages
+INSERT INTO `pipeline_stages` (`stage_name`, `stage_order`) VALUES
+('New Inquiry', 1),
+('Contacted', 2),
+('Counseled', 3),
+('Demo Attended', 4),
+('Payment Pending', 5),
+('Enrolled', 6);

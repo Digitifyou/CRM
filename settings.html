@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Training Academy CRM</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/students.html">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/enrollments.html">Enrollments</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/settings.html">Settings</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h2 class="mb-4">System Settings</h2>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group" id="settings-tabs" role="tablist">
+                    <a class="list-group-item list-group-item-action active" id="courses-tab" data-bs-toggle="list" href="#courses-pane" role="tab">
+                        <i class="bi bi-book me-2"></i> Course Management
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="batches-tab" data-bs-toggle="list" href="#batches-pane" role="tab">
+                        <i class="bi bi-calendar-event me-2"></i> Batch Management
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="pipeline-tab" data-bs-toggle="list" href="#pipeline-pane" role="tab">
+                        <i class="bi bi-diagram-3 me-2"></i> Pipeline Editor
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="users-tab" data-bs-toggle="list" href="#users-pane" role="tab">
+                        <i class="bi bi-people me-2"></i> User Management
+                    </a>
+                    <a class="list-group-item list-group-item-action" id="integrations-tab" data-bs-toggle="list" href="#integrations-pane" role="tab">
+                        <i class="bi bi-globe me-2"></i> Integrations
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="tab-content">
+
+                    <div class="tab-pane fade show active" id="courses-pane" role="tabpanel" aria-labelledby="courses-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Manage Courses</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                                <i class="bi bi-plus-lg"></i> Add New Course
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Course Name</th>
+                                            <th>Standard Fee (₹)</th>
+                                            <th>Duration</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="course-list-table">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Loading courses...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="batches-pane" role="tabpanel" aria-labelledby="batches-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Manage Batches</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBatchModal">
+                                <i class="bi bi-plus-lg"></i> Add New Batch
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Batch Name</th>
+                                            <th>Course</th>
+                                            <th>Start Date</th>
+                                            <th>Seats</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="batch-list-table">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading batches...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="pipeline-pane" role="tabpanel" aria-labelledby="pipeline-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Edit Admissions Funnel Stages</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStageModal">
+                                <i class="bi bi-plus-lg"></i> Add New Stage
+                            </button>
+                        </div>
+                        <div class="alert alert-info">
+                            Drag and drop the stages below to re-order your Kanban board columns.
+                        </div>
+
+                        <ul class="list-group list-group-flush" id="pipeline-stages-list">
+                        </ul>
+                    </div>
+
+                    <div class="tab-pane fade" id="users-pane" role="tabpanel" aria-labelledby="users-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Manage CRM Users</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="bi bi-person-plus-fill"></i> Invite New User
+                            </button>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Username</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="user-list-table">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading users...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="integrations-pane" role="tabpanel" aria-labelledby="integrations-tab">
+                        <h3 class="mb-4">Lead Capture Integrations</h3>
+                        <p class="text-muted">Connect your external platforms to automatically push leads into the CRM.</p>
+
+                        <div class="card mb-3" data-platform="meta">
+                            <div class="card-header bg-primary text-white">
+                                <i class="bi bi-meta me-2"></i> Meta Lead Ads
+                            </div>
+                            <form class="p-3 integration-form" data-platform-id="meta">
+                                <input type="hidden" name="platform" value="meta">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="meta_api_key" class="form-label">API Key/Access Token</label>
+                                        <input type="text" class="form-control" name="api_key" id="meta_api_key">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="meta_form_id" class="form-label">Form ID (e.g., Lead Form ID)</label>
+                                        <input type="text" class="form-control" name="form_id" id="meta_form_id">
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="meta_is_active" name="is_active" checked>
+                                        <label class="form-check-label" for="meta_is_active">Integration Active</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Save Meta Settings</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card mb-3" data-platform="website_form">
+                            <div class="card-header bg-secondary text-white">
+                                <i class="bi bi-browser-chrome me-2"></i> Website Contact Form
+                            </div>
+                            <form class="p-3 integration-form" data-platform-id="website_form">
+                                <input type="hidden" name="platform" value="website_form">
+                                <div class="mb-3">
+                                    <label class="form-label">Webhook URL</label>
+                                    <input type="text" class="form-control" readonly value="[Your CRM Base URL]/api/v1/webhook.php?key=[AUTO GENERATED KEY]">
+                                    <small class="form-text text-muted">Use this URL in your website's form submission logic.</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="website_is_active" name="is_active" checked>
+                                        <label class="form-check-label" for="website_is_active">Integration Active</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Save Website Settings</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCourseModalLabel">Add New Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-course-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="course_name" class="form-label">Course Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="course_name" name="course_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="standard_fee" class="form-label">Standard Fee (₹) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="standard_fee" name="standard_fee" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="duration" class="form-label">Duration (e.g., "6 Months")</label>
+                            <input type="text" class="form-control" id="duration" name="duration">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Course</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addBatchModal" tabindex="-1" aria-labelledby="addBatchModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addBatchModalLabel">Create New Batch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-batch-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="batch_name" class="form-label">Batch Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="batch_name" name="batch_name" required placeholder="e.g., FS-J24-A">
+                        </div>
+                        <div class="mb-3">
+                            <label for="course_id" class="form-label">Course <span class="text-danger">*</span></label>
+                            <select class="form-select" id="batch-course-id" name="course_id" required>
+                                <option value="">-- Select Course --</option>
+                                </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="total_seats" class="form-label">Total Seats <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="total_seats" name="total_seats" required min="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Batch</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addStageModal" tabindex="-1" aria-labelledby="addStageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStageModalLabel">Add New Pipeline Stage</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-stage-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="stage_name" class="form-label">Stage Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="stage_name" name="stage_name" required placeholder="e.g., Follow-up Sent, Scheduled Demo">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Stage</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Invite New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-user-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="user_full_name" name="full_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username (Login ID) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Temporary Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="counselor">Counselor</option>
+                                <option value="trainer">Trainer</option>
+                                <option value="owner">Owner</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Invite User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/settings_courses.js" defer></script>
+    <script src="/assets/js/settings_pipeline.js" defer></script>
+    <script src="/assets/js/settings_users.js" defer></script>
+    <script src="/assets/js/settings_batches.js" defer></script>
+    <script src="/assets/js/settings_integrations.js" defer></script>
+</body>
+
+</html>

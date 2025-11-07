@@ -1,0 +1,97 @@
+/* * assets/css/style.css
+ * Add these styles for the Kanban Board
+ */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.kanban-board-container {
+    display: flex;
+    overflow-x: auto;
+    /* Allows horizontal scrolling */
+    padding-bottom: 20px;
+}
+
+.kanban-board {
+    display: flex;
+    gap: 16px;
+    /* Space between columns */
+    min-height: 80vh;
+}
+
+.kanban-column {
+    flex: 0 0 300px;
+    /* Each column is 300px wide, don't grow/shrink */
+    background-color: #e9ecef;
+    /* Light grey background */
+    border-radius: 8px;
+    height: fit-content;
+}
+
+.kanban-column-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.kanban-dropzone {
+    padding: 8px;
+    min-height: 200px;
+    transition: background-color 0.2s ease;
+}
+
+
+/* This class is added by JS when dragging over */
+
+.kanban-dropzone--over {
+    background-color: #d6e9ff;
+    /* Highlight drop target */
+}
+
+.kanban-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: grab;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kanban-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-card h6 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.kanban-card p {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.kanban-card span {
+    font-size: 0.8rem;
+    color: #dc3545;
+    /* Red for overdue */
+    font-weight: 500;
+}
+
+
+/* This class is added by JS when a card is being dragged */
+
+.kanban-card--dragging {
+    opacity: 0.5;
+    background: #f0f0f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
