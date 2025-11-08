@@ -18,7 +18,8 @@ function renderPipelineStages() {
     pipelineStagesList.innerHTML = ''; // Clear list
 
     if (stages.length === 0) {
-        pipelineStagesList.innerHTML = '<li class="list-group-item text-center text-muted">No stages defined.</li>';
+        // Updated message for clarity
+        pipelineStagesList.innerHTML = '<li class="list-group-item text-center text-muted">No pipeline stages are defined. Use the "Add New Stage" button above.</li>';
         return;
     }
 
@@ -47,6 +48,7 @@ function renderPipelineStages() {
     setupDragAndDrop();
 }
 
+
 /**
  * Fetches all pipeline stages from the API and renders them
  */
@@ -61,7 +63,8 @@ async function loadPipelineStages() {
 
     } catch (error) {
         console.error('Error loading pipeline stages:', error);
-        pipelineStagesList.innerHTML = `<li class="list-group-item text-center text-danger">Failed to load stages: ${error.message}</li>`;
+        // Updated error message for debugging visibility
+        pipelineStagesList.innerHTML = `<li class="list-group-item text-center text-danger">Failed to load stages. Check console and API: ${error.message}</li>`;
     }
 }
 
@@ -95,6 +98,8 @@ async function handleAddStage(event) {
         alert('Error: ' + error.message);
     }
 }
+
+loadPipelineStages()
 
 /**
  * Deletes a stage (DELETE request)
@@ -208,11 +213,6 @@ function setupDragAndDrop() {
             }
             return { id: stageId, order: newOrder };
         });
-
-        // Although only one API call is made above for the dragged item, 
-        // a full reorder API call to re-sequence all stages might be better 
-        // in a production app to prevent order conflicts, but this simple
-        // approach will suffice for the MVP.
 
         // Reload all stages to show the new persistent order, which will also update the local 'stages' array
         await loadPipelineStages();

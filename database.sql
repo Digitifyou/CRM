@@ -103,6 +103,44 @@ CREATE TABLE `integrations` (
     `is_active` BOOLEAN DEFAULT TRUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 9. Custom Fields for Student Module (Dynamic Fields)
+CREATE TABLE `custom_fields` (
+    `field_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `field_name` VARCHAR(100) NOT NULL,
+    `field_key` VARCHAR(100) NOT NULL UNIQUE, -- e.g., "expected_salary" (used in DB)
+    `field_type` ENUM('text', 'select', 'number') NOT NULL DEFAULT 'text',
+    `options` TEXT, -- JSON string for select options (e.g., '["Yes", "No"]')
+    `is_required` BOOLEAN DEFAULT FALSE,
+    `is_score_field` BOOLEAN DEFAULT FALSE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- SQL TO RUN AGAINST crm_academy DATABASE
+CREATE TABLE `system_field_config` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `field_key` VARCHAR(50) NOT NULL UNIQUE, -- e.g., 'lead_source', 'full_name'
+    `display_name` VARCHAR(150) NULL,
+    `is_required` BOOLEAN DEFAULT FALSE,
+    `is_score_field` BOOLEAN DEFAULT FALSE,
+    `scoring_rules` TEXT NULL, -- JSON string for dynamic rules
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MUST BE EXECUTED AGAINST YOUR DATABASE
+-- A. Add generic column to students table (for custom field data)
+ALTER TABLE `students` ADD `custom_data` TEXT NULL;
+
+-- B. Create system configuration table (for persistent scoring rules)
+CREATE TABLE IF NOT EXISTS `system_field_config` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `field_key` VARCHAR(50) NOT NULL UNIQUE,
+    `display_name` VARCHAR(150) NULL,
+    `is_required` BOOLEAN DEFAULT FALSE,
+    `is_score_field` BOOLEAN DEFAULT FALSE,
+    `scoring_rules` TEXT NULL,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Insert default admin user (Password: "admin123")
 INSERT INTO `users` (`username`, `password_hash`, `full_name`, `role`) 
 VALUES ('admin', '$2y$10$E.qJ4s5.XG9iulv.w8D2KuBKY64K0y4f6.0fGq.h/E270xflhRDia', 'Admin User', 'admin');

@@ -80,8 +80,22 @@ try {
     $dashboardData['conversion_rate'] = round($conversion_rate, 2);
     $dashboardData['funnel_data'] = $funnel_data;
     
-    // --- Batch Status (Placeholder/Future) ---
-    // The query for batches will go here when batches are implemented
+    // --- Batch Status (NEW) ---
+    $batch_query = $pdo->query("
+        SELECT 
+            b.batch_name,
+            b.start_date,
+            b.total_seats,
+            b.filled_seats,
+            c.course_name
+        FROM batches b
+        JOIN courses c ON b.course_id = c.course_id
+        WHERE b.start_date >= CURDATE()
+        ORDER BY b.start_date ASC
+        LIMIT 5
+    ");
+    $dashboardData['upcoming_batches'] = $batch_query->fetchAll();
+
 
     echo json_encode($dashboardData);
 

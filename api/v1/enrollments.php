@@ -31,7 +31,7 @@ try {
             echo json_encode($enrollments);
             break;
 
-        // --- UPDATE (Handle drag-and-drop AND Win/Loss) ---
+        // --- UPDATE (Handle drag-and-drop AND Win/Loss AND Reopen) ---
         case 'PUT':
             $data = json_decode(file_get_contents('php://input'), true);
 
@@ -45,7 +45,7 @@ try {
             $params = [];
             $updates = [];
 
-            if (isset($data['new_stage_id'])) {
+            if (isset($data['new_stage_id']) && !isset($data['status'])) {
                 // Action: Pipeline Stage Change (Drag-and-Drop)
                 $updates[] = 'pipeline_stage_id = ?';
                 $params[] = (int)$data['new_stage_id'];
@@ -53,24 +53,47 @@ try {
 
             } else if (isset($data['status']) && $data['status'] === 'enrolled') {
                 // Action: Mark as ENROLLED (WON)
-                // Set status to 'enrolled' and mark fees paid (for MVP, assume full payment for 'won')
                 $updates[] = 'status = ?';
                 $params[] = 'enrolled';
                 
-                // Get agreed fee to mark as paid
-                $fee_stmt = $pdo->prepare("SELECT total_fee_agreed, student_id FROM enrollments WHERE enrollment_id = ?");
+                // Get agreed fee, student ID, and course ID
+                $fee_stmt = $pdo->prepare("SELECT total_fee_agreed, student_id, course_id FROM enrollments WHERE enrollment_id = ?");
                 $fee_stmt->execute([$enrollment_id]);
                 $enroll_details = $fee_stmt->fetch();
 
                 if ($enroll_details) {
+                    // Update fees paid (assuming full payment on enrollment for MVP)
                     $updates[] = 'total_fee_paid = ?';
                     $params[] = $enroll_details['total_fee_agreed'];
                     
-                    // Also update student status to 'active_student'
+                    // Update student status to 'active_student'
                     $student_stmt = $pdo->prepare("UPDATE students SET status = 'active_student' WHERE student_id = ?");
                     $student_stmt->execute([(int)$enroll_details['student_id']]);
+                    
+                    // Find and update the corresponding batch seat count
+                    if ($enroll_details['course_id']) {
+                        $batch_stmt = $pdo->prepare("
+                            SELECT batch_id 
+                            FROM batches 
+                            WHERE course_id = ? 
+                            AND start_date >= CURDATE() 
+                            AND filled_seats < total_seats
+                            ORDER BY start_date ASC 
+                            LIMIT 1
+                        ");
+                        $batch_stmt->execute([(int)$enroll_details['course_id']]);
+                        $batch_id = $batch_stmt->fetchColumn();
+                        
+                        if ($batch_id) {
+                            $pdo->prepare("UPDATE batches SET filled_seats = filled_seats + 1 WHERE batch_id = ?")
+                                ->execute([$batch_id]);
+                            $message = 'Enrollment WON and Batch seat updated.';
+                        } else {
+                            $message = 'Enrollment WON, but no open batch was found to update.';
+                        }
+                    }
                 }
-                $message = 'Enrollment marked as ENROLLED (Won)';
+                $message = $message ?? 'Enrollment marked as ENROLLED (Won)'; // Fallback message
 
             } else if (isset($data['status']) && $data['status'] === 'lost') {
                 // Action: Mark as LOST
@@ -82,6 +105,14 @@ try {
                     $params[] = $data['lost_reason'];
                 }
                 $message = 'Enrollment marked as LOST';
+            } else if (isset($data['status']) && $data['status'] === 'open' && isset($data['new_stage_id'])) {
+                // Action: REOPEN DEAL (Setting status to open AND moving stage)
+                $updates[] = 'status = ?';
+                $params[] = 'open';
+                $updates[] = 'pipeline_stage_id = ?';
+                $params[] = (int)$data['new_stage_id'];
+                
+                $message = 'Enrollment deal reopened and stage reset.';
             } else {
                  http_response_code(400);
                  echo json_encode(['error' => 'No valid update action provided.']);

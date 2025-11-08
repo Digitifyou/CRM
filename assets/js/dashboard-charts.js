@@ -9,6 +9,7 @@ const kpiEnrollments = document.getElementById('kpi-enrollments');
 const kpiConversion = document.getElementById('kpi-conversion');
 const kpiFees = document.getElementById('kpi-fees');
 const funnelLoading = document.getElementById('funnel-loading');
+const batchStatusTable = document.getElementById('batch-status-table'); // NEW ELEMENT ADDED HERE
 
 /**
  * Loads all dashboard data and updates the UI
@@ -22,6 +23,7 @@ async function loadDashboardData() {
 
         updateKPIs(data);
         renderFunnelChart(data.funnel_data);
+        renderBatchStatus(data.upcoming_batches); // NEW CALL
 
     } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -120,6 +122,45 @@ function renderFunnelChart(funnelData) {
                 }
             }
         }
+    });
+}
+
+
+/**
+ * Renders the upcoming batch status table (NEW)
+ * @param {Array} batches - Array of upcoming batch objects
+ */
+function renderBatchStatus(batches) {
+    batchStatusTable.innerHTML = ''; // Clear table
+
+    if (batches.length === 0) {
+        batchStatusTable.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No upcoming batches planned.</td></tr>';
+        return;
+    }
+
+    batches.forEach(batch => {
+        const startDate = new Date(batch.start_date).toLocaleDateString();
+        const seatsStatus = `${batch.filled_seats} / ${batch.total_seats}`;
+        
+        // Determine color for the seat status
+        let seatsColor = 'bg-success';
+        if (batch.filled_seats >= batch.total_seats) {
+            seatsColor = 'bg-danger'; // Batch is full
+        } else if (batch.filled_seats / batch.total_seats > 0.8) {
+            seatsColor = 'bg-warning text-dark'; // Almost full
+        }
+
+        const row = `
+            <tr>
+                <td>${batch.batch_name}</td>
+                <td>${batch.course_name}</td>
+                <td>${startDate}</td>
+                <td>
+                    <span class="badge ${seatsColor}">${seatsStatus}</span>
+                </td>
+            </tr>
+        `;
+        batchStatusTable.insertAdjacentHTML('beforeend', row);
     });
 }
 

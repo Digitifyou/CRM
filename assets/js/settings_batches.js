@@ -6,29 +6,60 @@ const API_COURSES = '/api/v1/courses.php';
 // --- DOM Elements ---
 const batchTableBody = document.getElementById('batch-list-table');
 const addBatchForm = document.getElementById('add-batch-form');
-const addBatchModal = new bootstrap.Modal(document.getElementById('addBatchModal'));
+// Use document.getElementById directly for the modal element
+const addBatchModalElement = document.getElementById('addBatchModal'); 
+const addBatchModal = new bootstrap.Modal(addBatchModalElement);
 const batchCourseSelect = document.getElementById('batch-course-id');
 const batchesPane = document.getElementById('batches-pane');
+
+// --- Caching for Courses (Optimized for repeated modal opening) ---
+let courseCache = [];
+
 
 /**
  * Fetches all courses and populates the dropdown
  */
 async function loadCoursesDropdown() {
+    // Use cached data if available
+    if (courseCache.length > 0) {
+        populateCourseSelect(courseCache);
+        return;
+    }
+
     try {
         const response = await fetch(API_COURSES);
         if (!response.ok) throw new Error('Could not fetch courses');
         const courses = await response.json();
+        
+        // Cache the result
+        courseCache = courses;
+        
+        populateCourseSelect(courses);
 
-        batchCourseSelect.innerHTML = '<option value="">-- Select Course --</option>'; // Reset
-        courses.forEach(course => {
-            const option = `<option value="${course.course_id}">${course.course_name}</option>`;
-            batchCourseSelect.insertAdjacentHTML('beforeend', option);
-        });
     } catch (error) {
-        console.error('Error loading courses for batch dropdown:', error);
-        batchCourseSelect.innerHTML = '<option value="">Could not load courses</option>';
+        console.error('CRITICAL: Error loading courses for batch dropdown. Check API_COURSES.', error);
+        batchCourseSelect.innerHTML = '<option value="" disabled>ERROR: Could not load courses</option>';
     }
 }
+
+/**
+ * Populates the actual <select> element with courses
+ * @param {Array} courses - Array of course objects
+ */
+function populateCourseSelect(courses) {
+    batchCourseSelect.innerHTML = '<option value="">-- Select Course --</option>'; // Reset
+    
+    if (courses.length === 0) {
+        batchCourseSelect.innerHTML = '<option value="" disabled>No courses defined in Course Management.</option>';
+        return;
+    }
+    
+    courses.forEach(course => {
+        const option = `<option value="${course.course_id}">${course.course_name}</option>`;
+        batchCourseSelect.insertAdjacentHTML('beforeend', option);
+    });
+}
+
 
 /**
  * Renders the list of batches into the table
@@ -97,6 +128,12 @@ async function handleAddBatch(event) {
 
     // Convert seat count to integer
     batchData.total_seats = parseInt(batchData.total_seats, 10);
+    
+    // Simple validation check before sending
+    if (!batchData.course_id || batchData.course_id === '') {
+        alert('Please select a course.');
+        return;
+    }
 
     try {
         const response = await fetch(API_BATCHES, {
@@ -155,14 +192,17 @@ async function deleteBatch(batchId) {
 
 // --- Global Functions and Event Listeners ---
 
-// Attach deleteBatch to window so it can be called from onclick in renderBatchTable
 window.deleteBatch = deleteBatch;
 
-// Event listener for when the Batches tab is clicked
+// 1. Load batches when the tab is switched to
 batchesPane.addEventListener('show.bs.tab', () => {
     loadBatches();
-    loadCoursesDropdown();
+    // Pre-load the courses list when entering the tab, for speed
+    loadCoursesDropdown(); 
 });
+
+// 2. Guarantee the dropdown is populated right before the modal shows
+addBatchModalElement.addEventListener('show.bs.modal', loadCoursesDropdown);
 
 document.addEventListener('DOMContentLoaded', () => {
     // If the batches tab is the active one on initial load
@@ -170,6 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadBatches();
         loadCoursesDropdown();
     }
-
+    
     addBatchForm.addEventListener('submit', handleAddBatch);
 });

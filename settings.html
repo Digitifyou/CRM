@@ -43,6 +43,9 @@
                     <a class="list-group-item list-group-item-action" id="users-tab" data-bs-toggle="list" href="#users-pane" role="tab">
                         <i class="bi bi-people me-2"></i> User Management
                     </a>
+                    <a class="list-group-item list-group-item-action" id="custom-fields-tab" data-bs-toggle="list" href="#custom-fields-pane" role="tab">
+                        <i class="bi bi-list-columns-reverse me-2"></i> Custom Fields
+                    </a>
                     <a class="list-group-item list-group-item-action" id="integrations-tab" data-bs-toggle="list" href="#integrations-pane" role="tab">
                         <i class="bi bi-globe me-2"></i> Integrations
                     </a>
@@ -147,6 +150,38 @@
                                     <tbody id="user-list-table">
                                         <tr>
                                             <td colspan="5" class="text-center">Loading users...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="custom-fields-pane" role="tabpanel" aria-labelledby="custom-fields-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">Custom Fields for Leads</h3>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomFieldModal">
+                                <i class="bi bi-plus-lg"></i> Add New Field
+                            </button>
+                        </div>
+                        <div class="alert alert-warning">
+                            Adding fields here requires database changes and an update to the Student Profile UI.
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Field Name</th>
+                                            <th>Key (DB Column)</th>
+                                            <th>Type</th>
+                                            <th>Scoring</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="custom-fields-list-table">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading fields...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -346,13 +381,89 @@
         </div>
     </div>
 
+    <div class="modal fade" id="addCustomFieldModal" tabindex="-1" aria-labelledby="addCustomFieldModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomFieldModalLabel">Define New Lead Field</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="add-custom-field-form">
+                    <input type="hidden" name="field_id" id="field_id_input">
+                    <input type="hidden" name="scoring_rules_json_hidden" id="scoring_rules_json_hidden"> <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="field_name" class="form-label">Display Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="field_name" name="field_name" required placeholder="e.g., Expected Salary">
+                        </div>
+                        <div class="mb-3">
+                            <label for="field_key" class="form-label">Database Key (Alpha-numeric, auto-slugged)</label>
+                            <input type="text" class="form-control" id="field_key" name="field_key" placeholder="e.g., expected_salary">
+                            <small class="text-muted">Used as the column name in the database.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="field_type" class="form-label">Field Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="field_type" name="field_type" required onchange="toggleFieldSections()">
+                                <option value="text">Text Input</option>
+                                <option value="number">Number Input</option>
+                                <option value="select">Dropdown (Select)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="field-options-group">
+                            <label for="options" class="form-label">Dropdown Options (Comma-Separated) <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="options" name="options" rows="2" placeholder="e.g., High, Medium, Low"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_required" id="is_required">
+                                    <label class="form-check-label" for="is_required">Required Field</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_score_field" id="is_score_field">
+                                    <label class="form-check-label" for="is_score_field">Use for Lead Scoring</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 d-none" id="score-rules-panel">
+                            <label class="form-label">Configure Lead Scoring Rules</label>
+                            <p class="text-muted small">Enter comma-separated values that correspond to each score level.</p>
+
+                            <div class="card card-body p-2 mb-2 border-success">
+                                <label for="rules-high" class="form-label mb-1 text-success">High Score (50 pts)</label>
+                                <textarea class="form-control form-control-sm score-input-rules" id="rules-high" data-level="High" rows="2" placeholder="e.g., Fresher, 4+ Years Exp, M.Tech"></textarea>
+                            </div>
+
+                            <div class="card card-body p-2 mb-2 border-warning">
+                                <label for="rules-medium" class="form-label mb-1 text-warning">Medium Score (25 pts)</label>
+                                <textarea class="form-control form-control-sm score-input-rules" id="rules-medium" data-level="Medium" rows="2" placeholder="e.g., 2-4 Years Exp, BSc"></textarea>
+                            </div>
+
+                            <div class="card card-body p-2 mb-2 border-info">
+                                <label for="rules-low" class="form-label mb-1 text-info">Low Score (10 pts)</label>
+                                <textarea class="form-control form-control-sm score-input-rules" id="rules-low" data-level="Low" rows="2" placeholder="e.g., 5+ Years Exp, Career Gap, Other"></textarea>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Field Definition</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/settings_courses.js" defer></script>
     <script src="/assets/js/settings_pipeline.js" defer></script>
     <script src="/assets/js/settings_users.js" defer></script>
     <script src="/assets/js/settings_batches.js" defer></script>
-    <script src="/assets/js/settings_integrations.js" defer></script>
-</body>
+    <script src="/assets/js/settings_custom_fields.js" defer></script>
+    </body>
 
 </html>
