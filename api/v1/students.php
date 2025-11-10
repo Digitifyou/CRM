@@ -8,10 +8,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Standard Score Points Mapping for dynamic weights
 const SCORE_POINTS = [
-    'Low' => 10,
-    'Medium' => 25,
-    'High' => 50
+    'Low' => 25,
+    'Medium' => 50,
+    'High' => 100
 ];
+const MAX_SCORE_PER_FIELD = 100; // Total possible score assigned to any single field
 
 /**
  * Calculates the total score value for a given score level (Low, Medium, High).
@@ -51,7 +52,7 @@ function getScoringConfiguration($pdo) {
         $config[$row['field_key']] = $row;
     }
     
-    // Safety Net: Add hardcoded defaults for keys if missing config (to prevent 0 scores)
+    // Safety Net: Add hardcoded defaults for built-in fields if configuration is missing
     $default_scoring_rules = '{"High": "ANY"}'; 
     $default_keys = ['course_interested_id', 'lead_source', 'qualification', 'work_experience'];
     foreach ($default_keys as $key) {
@@ -59,7 +60,7 @@ function getScoringConfiguration($pdo) {
              $config[$key] = [
                  'field_key' => $key, 
                  'is_score_field' => 1, 
-                 'scoring_rules' => $default_scoring_rules // Simple score if set to true
+                 'scoring_rules' => $default_scoring_rules
              ];
         }
     }
@@ -108,7 +109,8 @@ function calculateAndUpdateLeadScoreInline($pdo, $student_id, $data = []) {
     // 2. Get Configuration
     $scoring_config = getScoringConfiguration($pdo);
 
-    $score = 0;
+    $total_score_obtained = 0;
+    $total_max_possible = 0;
 
     // --- 3. Dynamic Scoring Logic ---
     
@@ -121,50 +123,65 @@ function calculateAndUpdateLeadScoreInline($pdo, $student_id, $data = []) {
         // Find the student's value for the current scoring key
         $student_value = $all_scoring_fields[$field_key] ?? null;
         
-        if ($config['is_score_field'] == 1 && !empty($student_value)) {
+        if ($config['is_score_field'] == 1) {
             
-            // CRITICAL: Scoring Logic Here
-            $rules_json = $config['scoring_rules'] ?? null;
-            $rules = $rules_json ? json_decode($rules_json, true) : [];
-            $student_value_lower = strtolower((string)$student_value);
-            
-            $matched_level = null;
-            $base_score_applied = false;
+            // This field contributes to the maximum possible score regardless of value
+            $total_max_possible += MAX_SCORE_PER_FIELD; 
 
-            // A. Check for specific value match in rules (High, Medium, Low)
-            // Iterate in order (High > Medium > Low) to apply the highest score first
-            foreach (['High', 'Medium', 'Low'] as $level) {
-                if (isset($rules[$level])) {
-                    // Split, trim, and lowercase configured rules string:
-                    $configured_values = array_map('strtolower', array_map('trim', explode(',', $rules[$level])));
-                    
-                    if (in_array($student_value_lower, $configured_values) || in_array('any', $configured_values)) {
-                         $matched_level = $level;
-                         break; // Apply highest matching score and exit loop
+            // Only score if a value is present
+            if (!empty($student_value)) {
+                
+                $rules_json = $config['scoring_rules'] ?? null;
+                $rules = $rules_json ? json_decode($rules_json, true) : [];
+                $student_value_lower = strtolower((string)$student_value);
+                
+                $matched_level = null;
+                $base_score_applied = false;
+
+                // A. Check for specific value match in rules (High, Medium, Low)
+                // Iterate in order (High > Medium > Low) to apply the highest score first
+                foreach (['High', 'Medium', 'Low'] as $level) {
+                    if (isset($rules[$level])) {
+                        // Split, trim, and lowercase configured rules string:
+                        $configured_values = array_map('strtolower', array_map('trim', explode(',', $rules[$level])));
+                        
+                        if (in_array($student_value_lower, $configured_values) || in_array('any', $configured_values)) {
+                             $matched_level = $level;
+                             break; // Apply highest matching score and exit loop
+                        }
                     }
                 }
-            }
-            
-            // B. Apply Score based on matched level (or default if available)
-            if ($matched_level) {
-                $score += getScoreValue($matched_level);
-                $base_score_applied = true;
-            } else if (isset($rules['default'])) {
-                 // Fallback score if a value exists but doesn't match a specific rule
-                 $score += getScoreValue($rules['default']);
-                 $base_score_applied = true;
-            }
+                
+                // B. Apply Score based on matched level (or default if available)
+                if ($matched_level) {
+                    $total_score_obtained += getScoreValue($matched_level);
+                    $base_score_applied = true;
+                } else if (isset($rules['default'])) {
+                     // Apply a default score if a value exists but doesn't match a specific rule
+                     $total_score_obtained += getScoreValue($rules['default']);
+                     $base_score_applied = true;
+                }
 
-            // C. Special Rule for Course Fee Bonus (Hardcoded for high value built-in course field)
-            if ($field_key === 'course_interested_id' && $student['standard_fee'] > 30000 && $base_score_applied) {
-                 $score += 10;
+                // C. Special Rule for Course Fee Bonus (Hardcoded for high value built-in course field)
+                if ($field_key === 'course_interested_id' && $student['standard_fee'] > 30000 && $base_score_applied) {
+                     $total_score_obtained += 10;
+                }
             }
         }
     }
 
-    $final_score = min(100, max(0, $score)); 
+    // 4. Calculate Final Weighted Score
+    if ($total_max_possible === 0) {
+        $final_score = 0;
+    } else {
+        // Final Score = (Total Obtained / Total Possible) * 100
+        $final_score = round(($total_score_obtained / $total_max_possible) * 100);
+    }
+    
+    // Ensure final score is capped at 100%
+    $final_score = min(100, max(0, $final_score)); 
 
-    // 4. Update student lead_score in DB
+    // 5. Update student lead_score in DB
     $update_stmt = $pdo->prepare("UPDATE students SET lead_score = ? WHERE student_id = ?");
     $update_stmt->execute([$final_score, $student_id]);
 
