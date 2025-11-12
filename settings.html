@@ -20,6 +20,7 @@
                     <li class="nav-item"><a class="nav-link" href="/students.html">Students</a></li>
                     <li class="nav-item"><a class="nav-link" href="/enrollments.html">Enrollments</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/settings.html">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/meta_ads.html">Meta Ads</a></li>
                 </ul>
             </div>
         </div>
@@ -194,29 +195,41 @@
                         <p class="text-muted">Connect your external platforms to automatically push leads into the CRM.</p>
 
                         <div class="card mb-3" data-platform="meta">
-                            <div class="card-header bg-primary text-white">
-                                <i class="bi bi-meta me-2"></i> Meta Lead Ads
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <i class="bi bi-meta me-2"></i> Meta Lead Ads (Facebook/Instagram)
+                                <span id="meta-connection-status" class="badge bg-danger">Disconnected</span>
                             </div>
-                            <form class="p-3 integration-form" data-platform-id="meta">
-                                <input type="hidden" name="platform" value="meta">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="meta_api_key" class="form-label">API Key/Access Token</label>
-                                        <input type="text" class="form-control" name="api_key" id="meta_api_key">
+                            
+                            <div class="card-body">
+                                <h5>Connection</h5>
+                                <p>Connect your account to fetch ad data, lead forms, and metrics.</p>
+                                <button class="btn btn-primary" id="meta-login-button">
+                                    <i class="bi bi-facebook me-2"></i> Connect with Facebook
+                                </button>
+
+                                <hr class="mt-4">
+                                <h5>Lead Form Field Mapping</h5>
+                                <p class="text-muted small">Map fields from your Meta Lead Forms to fields in your CRM.</p>
+                                
+                                <form id="meta-mapping-form">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Meta Field Name (Source)</th>
+                                                    <th>CRM Field Key (Target)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="meta-mapping-table">
+                                                <tr><td colspan="2" class="text-center text-muted">Load Meta Forms to map fields.</td></tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="meta_form_id" class="form-label">Form ID (e.g., Lead Form ID)</label>
-                                        <input type="text" class="form-control" name="form_id" id="meta_form_id">
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="meta_is_active" name="is_active" checked>
-                                        <label class="form-check-label" for="meta_is_active">Integration Active</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">Save Meta Settings</button>
-                                </div>
-                            </form>
+                                    <button type="submit" class="btn btn-success btn-sm mt-2" id="save-mapping-button" disabled>
+                                        Save Field Mapping
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
                         <div class="card mb-3" data-platform="website_form">
@@ -432,18 +445,18 @@
                             <p class="text-muted small">Enter comma-separated values that correspond to each score level.</p>
 
                             <div class="card card-body p-2 mb-2 border-success">
-                                <label for="rules-high" class="form-label mb-1 text-success">High Score (50 pts)</label>
-                                <textarea class="form-control form-control-sm score-input-rules" id="rules-high" data-level="High" rows="2" placeholder="e.g., Fresher, 4+ Years Exp, M.Tech"></textarea>
+                                <label for="rules-high" class="form-label mb-1 text-success">High Score (100 pts)</label>
+                                <textarea class="form-control form-control-sm score-input-rules" id="rules-high" data-level="High" rows="2" placeholder="e.g., Fresher, M.Tech"></textarea>
                             </div>
 
                             <div class="card card-body p-2 mb-2 border-warning">
-                                <label for="rules-medium" class="form-label mb-1 text-warning">Medium Score (25 pts)</label>
+                                <label for="rules-medium" class="form-label mb-1 text-warning">Medium Score (50 pts)</label>
                                 <textarea class="form-control form-control-sm score-input-rules" id="rules-medium" data-level="Medium" rows="2" placeholder="e.g., 2-4 Years Exp, BSc"></textarea>
                             </div>
 
                             <div class="card card-body p-2 mb-2 border-info">
-                                <label for="rules-low" class="form-label mb-1 text-info">Low Score (10 pts)</label>
-                                <textarea class="form-control form-control-sm score-input-rules" id="rules-low" data-level="Low" rows="2" placeholder="e.g., 5+ Years Exp, Career Gap, Other"></textarea>
+                                <label for="rules-low" class="form-label mb-1 text-info">Low Score (25 pts)</label>
+                                <textarea class="form-control form-control-sm score-input-rules" id="rules-low" data-level="Low" rows="2" placeholder="e.g., 5+ Years Exp, Career Gap"></textarea>
                             </div>
                         </div>
                         

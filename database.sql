@@ -1,9 +1,7 @@
 -- Set timezone
 SET TIME_ZONE = '+05:30';
 
-
 CREATE DATABASE IF NOT EXISTS crm_academy DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
 
 -- 1. User Management
 CREATE TABLE `users` (
@@ -93,16 +91,6 @@ CREATE TABLE `activity_log` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 8. Integrations (Part of Settings)
-CREATE TABLE `integrations` (
-    `integration_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `platform` ENUM('meta', 'website_form') NOT NULL,
-    `api_key` VARCHAR(255),
-    `app_secret` VARCHAR(255),
-    `form_id` VARCHAR(255),
-    `is_active` BOOLEAN DEFAULT TRUE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- 9. Custom Fields for Student Module (Dynamic Fields)
 CREATE TABLE `custom_fields` (
     `field_id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -139,6 +127,56 @@ CREATE TABLE IF NOT EXISTS `system_field_config` (
     `is_score_field` BOOLEAN DEFAULT FALSE,
     `scoring_rules` TEXT NULL,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Existing definition of integrations table
+CREATE TABLE `integrations` (
+    `integration_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `platform` ENUM('meta', 'website_form') NOT NULL UNIQUE,
+    -- Renamed api_key to access_token for clarity
+    `access_token` TEXT, 
+    `app_secret` VARCHAR(255),
+    `form_id` VARCHAR(255),
+    `ad_account_id` VARCHAR(255) NULL, -- NEW FIELD for Meta Ad Account
+    `is_active` BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- NEW TABLE: Meta Ad Form Field Mapping
+CREATE TABLE `meta_field_mapping` (
+    `mapping_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `crm_field_key` VARCHAR(100) NOT NULL, -- The CRM field (e.g., 'phone', 'course_interested_id')
+    `meta_field_name` VARCHAR(100) NOT NULL, -- The Meta field (e.g., 'full_name', 'phone_number')
+    `is_active` BOOLEAN DEFAULT TRUE,
+    UNIQUE KEY `unique_mapping` (`crm_field_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ... (rest of the database.sql content remains the same)
+
+CREATE TABLE IF NOT EXISTS `meta_accounts` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `account_name` VARCHAR(255) NOT NULL,
+    `access_token` TEXT NOT NULL, -- Long-lived token for accessing ad data
+    `ad_account_id` VARCHAR(100), -- The main ad account ID used for billing
+    `is_active` BOOLEAN DEFAULT TRUE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `meta_ad_forms` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `form_id` VARCHAR(100) NOT NULL UNIQUE, -- The ID Meta uses for the form
+    `form_name` VARCHAR(255) NOT NULL,
+    `ad_account_id` VARCHAR(100) NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `meta_field_mapping` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `meta_field_name` VARCHAR(100) NOT NULL, -- e.g., 'FULL_NAME', 'EMAIL'
+    `crm_field_key` VARCHAR(100) NOT NULL, -- e.g., 'full_name', 'email', or a custom field key
+    `is_built_in` BOOLEAN DEFAULT TRUE, -- TRUE for students table, FALSE for custom_data field
+    UNIQUE KEY (`meta_field_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Insert default admin user (Password: "admin123")
