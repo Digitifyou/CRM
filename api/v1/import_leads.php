@@ -60,9 +60,6 @@ try {
             $crm_field_key = $field_mapping[$source_column] ?? null;
 
             if ($crm_field_key) {
-                // Trim the value
-                $value = trim($value);
-                
                 if (in_array($crm_field_key, ['full_name', 'email', 'phone', 'course_interested_id', 'lead_source', 'qualification', 'work_experience'])) {
                     $lead[$crm_field_key] = $value;
                 } else {

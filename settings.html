@@ -50,7 +50,10 @@
                     <a class="list-group-item list-group-item-action" id="integrations-tab" data-bs-toggle="list" href="#integrations-pane" role="tab">
                         <i class="bi bi-globe me-2"></i> Integrations
                     </a>
-                </div>
+                    <a class="list-group-item list-group-item-action" id="bulk-import-tab" data-bs-toggle="list" href="#bulk-import-pane" role="tab">
+                        <i class="bi bi-cloud-upload me-2"></i> Bulk Import
+                    </a>
+                    </div>
             </div>
             <div class="col-md-9">
                 <div class="tab-content">
@@ -252,10 +255,58 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
+                    
+                    <div class="tab-pane fade" id="bulk-import-pane" role="tabpanel" aria-labelledby="bulk-import-tab">
+                        <h3 class="mb-4">Bulk Import Leads from CSV/TSV</h3>
+                        <p class="text-muted">Import leads by providing a file link or uploading a local file.</p>
+                        
+                        <a href="#" id="download-sample-csv" class="btn btn-sm btn-outline-info mb-3">
+                            <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Sample CSV File
+                        </a>
 
-                </div>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">1. Source Data</h5>
+                                <form id="bulk-import-form">
+                                    
+                                    <div id="url-input-group" class="mb-3">
+                                        <label for="google_sheet_link" class="form-label">URL Link (Google Sheet Publish Link)</label>
+                                        <input type="url" class="form-control" id="google_sheet_link" name="google_sheet_link" placeholder="e.g., https://docs.google.com/spreadsheets/d/.../export?format=csv">
+                                    </div>
+                                    <div id="file-input-group" class="mb-3">
+                                        <label for="csv_file_upload" class="form-label">Local CSV/TSV File</label>
+                                        <input type="file" class="form-control" id="csv_file_upload" name="csv_file_upload" accept=".csv, .tsv, .txt">
+                                    </div>
+                                    
+                                    <h5 class="card-title mt-4">2. Field Mapping</h5>
+                                    <p class="text-muted small">Map the columns from your source (Source) to the fields in the CRM (Target). **Full Name** and **Phone Number** are required.</p>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Source Column Header</th>
+                                                    <th>CRM Field Key (Target)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="import-mapping-table">
+                                                <tr><td colspan="2" class="text-center text-muted">Enter data above and click Load to see columns.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div id="import-status-alert" class="alert d-none mt-3" role="alert"></div>
+
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-secondary me-2" id="load-columns-button" onclick="handleLoadColumns()">Load Columns</button>
+                                        <button type="submit" class="btn btn-primary" id="start-import-button" disabled>Start Bulk Import</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
             </div>
         </div>
 
@@ -477,6 +528,8 @@
     <script src="/assets/js/settings_users.js" defer></script>
     <script src="/assets/js/settings_batches.js" defer></script>
     <script src="/assets/js/settings_custom_fields.js" defer></script>
+    <script src="/assets/js/settings_integrations.js" defer></script>
+    <script src="/assets/js/settings_import.js" defer></script>
     </body>
 
 </html>
