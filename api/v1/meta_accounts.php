@@ -6,7 +6,8 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config.php'; 
 
 $method = $_SERVER['REQUEST_METHOD'];
-$admin_user_id = 1; // Hardcoded user ID for the admin connection
+// NOTE: We assume the user ID 1 is setting up the connection.
+$admin_user_id = 1; 
 
 try {
     switch ($method) {
@@ -22,12 +23,11 @@ try {
             $config = $stmt->fetch();
 
             if ($config) {
-                // Return only non-sensitive data and connection status
+                // Connection successful
                 echo json_encode([
                     'connected' => true,
                     'account_name' => $config['account_name'],
                     'ad_account_id' => $config['ad_account_id'],
-                    // Do NOT return the full access_token
                 ]);
             } else {
                 http_response_code(404);

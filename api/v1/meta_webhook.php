@@ -8,7 +8,7 @@ require_once __DIR__ . '/students.php'; // Contains lead creation and scoring fu
 
 // --- CONFIGURATION ---
 // This is the string you provide to Meta/Facebook for verification purposes.
-const META_VERIFY_TOKEN = 'EAA1OKJP7WowBP2fPE1rZAbEjZBsbhY67LmrDjAL0vwJqNkwU8a3XJY1n8ZAC3uppVj90F1ZCRZCGz1B0U8p3bhIqXMoZBvLVIAR1TMdZBoYEs8bn5NMwZCnJH3tWZBU0KVt4B9Y88r6yztkIhpv8fXp2uok1UTtv58VlfDo3rnHt60nED86fKxP4HrlfD1ZB7ZA'; 
+const META_VERIFY_TOKEN = 'EAA1OKJP7WowBP3ZCdZCvZChPUFAGG7SNMJGQFlgYplTGaXSuwXObH8YvYZB6TmwaZBGtTZASpWSId6bX8jjfzZAsW4s9QzGiPoo0y0TvanViIFX5KY2NyQZC6s6eZBZB2CL26AeksLFDKudPu5jIyCHQZBZBM4Xh8xYx1Pn351s34qzqOnPkmme4uR8bXgTJ3wyE'; 
 const META_API_VERSION = 'v19.0';
 const DEFAULT_LEAD_SOURCE = 'Meta Lead Ad';
 

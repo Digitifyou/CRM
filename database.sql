@@ -179,6 +179,28 @@ CREATE TABLE IF NOT EXISTS `meta_field_mapping` (
     UNIQUE KEY (`meta_field_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
+## 3. Final Step: Database Reset
+
+Since we confirmed your `meta_accounts` table is empty, please use the following SQL command to ensure the table structure is sound and ready for the new API endpoint to insert data:
+
+
+-- Ensure the meta_accounts table exists and is clean
+CREATE TABLE IF NOT EXISTS `meta_accounts` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `account_name` VARCHAR(255) NOT NULL,
+    `access_token` TEXT NOT NULL, 
+    `ad_account_id` VARCHAR(100), 
+    `is_active` BOOLEAN DEFAULT TRUE,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Add the necessary Foreign Key if it was missing in your setup
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- TRUNCATE the table to ensure a clean start for the new JS logic
+TRUNCATE TABLE `meta_accounts`;
+
 -- Insert default admin user (Password: "admin123")
 INSERT INTO `users` (`username`, `password_hash`, `full_name`, `role`) 
 VALUES ('admin', '$2y$10$E.qJ4s5.XG9iulv.w8D2KuBKY64K0y4f6.0fGq.h/E270xflhRDia', 'Admin User', 'admin');

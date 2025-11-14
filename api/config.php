@@ -1,7 +1,7 @@
 <?php
 // /config.php - CRITICAL FIX
 
-// Database connection parameters
+// --- DATABASE CONNECTION PARAMETERS ---
 $host = 'localhost';
 $db   = 'crm_academy';
 $user = 'root';    
@@ -19,10 +19,15 @@ try {
      // Establish the PDO connection and store it in the global $pdo variable
      $pdo = new PDO($dsn, $user, $pass, $options); 
 } catch (\PDOException $e) {
-     // Handle connection error gracefully
      http_response_code(500);
-     // Note: In production, do not expose $e->getMessage() for security
      echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
      exit;
 }
+
+// --- META API CREDENTIALS (NEW) ---
+// Your credentials MUST be defined here.
+define('META_APP_ID', '1170946974995892');
+define('META_APP_SECRET', '377431f42d7f0e4ba17dadbe867f329b');
+// This is the Facebook Page ID that your Lead Forms are tied to (required for Graph API calls)
+define('META_PAGE_ID', 'YOUR_FACEBOOK_PAGE_ID'); 
 ?>

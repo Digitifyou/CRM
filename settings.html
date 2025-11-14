@@ -205,10 +205,11 @@
                             
                             <div class="card-body">
                                 <h5>Connection</h5>
-                                <p>Connect your account to fetch ad data, lead forms, and metrics.</p>
+                                <p>Connect your account to fetch ad data, lead forms, and metrics. You need to grant `leads_retrieval`, `ads_read`, and `pages_manage_ads` permissions.</p>
                                 <button class="btn btn-primary" id="meta-login-button">
                                     <i class="bi bi-facebook me-2"></i> Connect with Facebook
                                 </button>
+                                <p id="auth-status-message" class="text-muted small mt-2 d-none">Initializing Meta SDK...</p>
 
                                 <hr class="mt-4">
                                 <h5>Lead Form Field Mapping</h5>
@@ -487,6 +488,7 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="is_score_field" id="is_score_field">
                                     <label class="form-check-label" for="is_score_field">Use for Lead Scoring</label>
+                                
                                 </div>
                             </div>
                         </div>
@@ -522,14 +524,42 @@
     </div>
 
 
+    <!-- Meta SDK initialization block -->
+    <script>
+        // CRITICAL: Replace 'YOUR_META_APP_ID_HERE' with your actual App ID
+        window.META_APP_ID = '1571347190947555'; 
+
+        // Load the Meta SDK asynchronousl
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : window.META_APP_ID,
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v19.0' // Use current Meta API version
+            });
+            // After initialization, check connection status
+            checkMetaConnectionStatus();
+        };
+
+        // Load the SDK script
+        (function(d, s, id){
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {return;}
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+    
+    <!-- Standard JS files -->
+    <script src="/assets/js/settings_integrations.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/settings_courses.js" defer></script>
-    <script src="/assets/js/settings_pipeline.js" defer></script>
-    <script src="/assets/js/settings_users.js" defer></script>
-    <script src="/assets/js/settings_batches.js" defer></script>
-    <script src="/assets/js/settings_custom_fields.js" defer></script>
-    <script src="/assets/js/settings_integrations.js" defer></script>
-    <script src="/assets/js/settings_import.js" defer></script>
+    <script src="/assets/js/settings_courses.js"></script>
+    <script src="/assets/js/settings_pipeline.js"></script>
+    <script src="/assets/js/settings_users.js"></script>
+    <script src="/assets/js/settings_batches.js"></script>
+    <script src="/assets/js/settings_custom_fields.js"></script>
+    <script src="/assets/js/settings_import.js"></script>
     
     </body>
 
