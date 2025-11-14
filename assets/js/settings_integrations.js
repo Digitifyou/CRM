@@ -1,8 +1,6 @@
 // /assets/js/settings_integrations.js
 
-const API_INTEGRATIONS = '/api/v1/integrations.php';
 const API_CUSTOM_FIELDS = '/api/v1/custom_fields.php'; 
-const API_SYSTEM_FIELDS = '/api/v1/system_fields.php'; 
 const API_META_MAPPING = '/api/v1/meta_mapping.php'; 
 const API_META_ACCOUNTS = '/api/v1/meta_accounts.php'; 
 const API_FORM_FETCHER = '/api/v1/meta_form_fetcher.php'; 
@@ -16,7 +14,16 @@ const metaMappingForm = document.getElementById('meta-mapping-form');
 const saveMappingButton = document.getElementById('save-mapping-button');
 const authStatusMessage = document.getElementById('auth-status-message'); 
 
-// --- Mock/Standard Data ---
+// NEW ELEMENTS FOR FORM HANDLING
+const metaFormSelect = document.getElementById('meta-form-select');
+const loadFieldsButton = document.getElementById('load-fields-button');
+
+
+let crmFields = []; // Cache of CRM field keys/names
+let currentFormFields = []; // Fields retrieved from the selected Meta form
+let pageData = {}; // Cache for Page ID and Name
+
+// --- Mock Data (Now ONLY used for layout reference) ---
 const MOCK_META_FIELDS = [
     { name: 'FULL_NAME', display: 'Full Name' },
     { name: 'EMAIL', display: 'Email Address' },
@@ -25,8 +32,6 @@ const MOCK_META_FIELDS = [
     { name: 'WORK_EXPERIENCE_LEVEL', display: 'Work Experience Level' },
     { name: 'COURSE_QUESTION', display: 'Course Question' },
 ];
-
-let crmFields = []; // Cache of CRM field keys/names
 
 
 /**
@@ -61,13 +66,19 @@ async function fetchAllCrmFields() {
 }
 
 /**
- * Renders the mapping table.
+ * Renders the mapping table using fetched Meta fields (currentFormFields).
+ * @param {Object} savedMapping - Current mapping config from DB.
  */
 function renderMappingTable(savedMapping = {}) {
     metaMappingTable.innerHTML = '';
     
-    MOCK_META_FIELDS.forEach(metaField => {
-        // Find the saved config for this meta field, or set defaults
+    if (currentFormFields.length === 0) {
+        metaMappingTable.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No fields loaded. Select a form first.</td></tr>';
+        saveMappingButton.disabled = true;
+        return;
+    }
+    
+    currentFormFields.forEach(metaField => {
         const savedConfig = savedMapping[metaField.name] || { crm_field_key: '', is_built_in: true };
         
         let optionsHtml = '<option value="">-- Ignore Field --</option>';
@@ -79,7 +90,7 @@ function renderMappingTable(savedMapping = {}) {
         
         const row = `
             <tr>
-                <td><strong>${metaField.display}</strong><br><small class="text-muted">${metaField.name}</small></td>
+                <td><strong>${metaField.display || metaField.name}</strong><br><small class="text-muted">${metaField.name}</small></td>
                 <td>
                     <select class="form-select form-select-sm" name="${metaField.name}" required>
                         ${optionsHtml}
@@ -100,18 +111,16 @@ async function saveFieldMapping(event) {
     event.preventDefault();
     saveMappingButton.disabled = true;
 
-    // 1. Collect and serialize mapping data
     const mappingDataToSend = {};
     const selects = metaMappingTable.querySelectorAll('select');
 
     selects.forEach(select => {
         const metaField = select.name;
-        const selectedValue = select.value; // e.g., 'full_name|1' or ''
+        const selectedValue = select.value;
         
         if (selectedValue) {
             const [crmFieldKey, isBuiltInFlag] = selectedValue.split('|');
             
-            // Map to the structure expected by the PHP backend
             mappingDataToSend[metaField] = {
                 crm_field_key: crmFieldKey,
                 is_built_in: isBuiltInFlag === '1'
@@ -125,7 +134,6 @@ async function saveFieldMapping(event) {
         return;
     }
 
-    // 2. Send mapping data to API
     try {
         const response = await fetch(API_META_MAPPING, {
             method: 'POST',
@@ -143,62 +151,125 @@ async function saveFieldMapping(event) {
     saveMappingButton.disabled = false;
 }
 
+
 /**
- * Loads the mapping section data and populates the table.
+ * Fetches the list of forms for the Ad Account and populates the dropdown.
  */
-async function loadMappingSection() {
-    await fetchAllCrmFields();
-    
-    // 1. Fetch SAVED mapping data from DB
-    let savedMapping = {};
+async function fetchAndRenderForms() {
+    metaFormSelect.innerHTML = '<option value="">Loading forms...</option>';
+    loadFieldsButton.disabled = true;
+
     try {
-        const response = await fetch(API_META_MAPPING);
-        if (response.ok) {
-            savedMapping = await response.json();
+        const response = await fetch(API_FORM_FETCHER);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to fetch forms. Check permissions.");
         }
+        
+        const data = await response.json();
+        const forms = data.forms || [];
+        
+        metaFormSelect.innerHTML = '<option value="">-- Select a Form --</option>';
+        
+        if (forms.length === 0) {
+            metaFormSelect.innerHTML = '<option value="">No Lead Forms found for your account.</option>';
+            return;
+        }
+
+        forms.forEach(form => {
+            const option = document.createElement('option');
+            option.value = form.id;
+            // Store Page ID/Name for easy webhook subscription later
+            option.dataset.pageId = form.page_id;
+            option.textContent = `${form.name} (Page ID: ${form.page_id})`;
+            metaFormSelect.appendChild(option);
+        });
+
+        loadFieldsButton.disabled = false;
+
     } catch (e) {
-        console.warn("Could not fetch existing mapping:", e);
+        alert(`Error fetching forms: ${e.message}`);
+        metaFormSelect.innerHTML = '<option value="">Error loading forms.</option>';
     }
+}
+
+/**
+ * Handles the click to fetch fields for the currently selected form.
+ */
+async function handleLoadFields() {
+    const selectedForm = metaFormSelect.options[metaFormSelect.selectedIndex];
+    const formId = selectedForm.value;
     
-    // 2. Render the table with existing data
-    renderMappingTable(savedMapping);
+    if (!formId) {
+        alert('Please select a valid form first.');
+        return;
+    }
+
+    // Set Page Data globally (needed for webhook subscription)
+    pageData.id = selectedForm.dataset.pageId;
+    pageData.name = selectedForm.textContent;
+
+    metaMappingTable.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Fetching fields...</td></tr>';
+    loadFieldsButton.disabled = true;
+
+    try {
+        const response = await fetch(`${API_FORM_FETCHER}?form_id=${formId}`);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to fetch fields for the form.");
+        }
+        
+        const data = await response.json();
+        currentFormFields = data.fields || [];
+
+        // Now render the mapping table with the live fields
+        renderMappingTable();
+        loadFieldsButton.disabled = false;
+        
+    } catch (e) {
+        alert(`Error: ${e.message}`);
+        metaMappingTable.innerHTML = '<tr><td colspan="2" class="text-center text-danger">Failed to load fields.</td></tr>';
+        loadFieldsButton.disabled = false;
+    }
 }
 
 
 /**
- * Core function to query the Graph API to get the user's Ad Account ID and Name.
+ * Checks the database for saved Meta account credentials using the dedicated API endpoint.
  */
-async function fetchAdAccountDetails(accessToken) {
+async function checkMetaConnectionStatus() {
     try {
-        // We request /me/adaccounts to get the user's associated accounts
-        // Using FB.api for SDK integrated calls
-        return new Promise((resolve, reject) => {
-            FB.api('/me/adaccounts', {
-                fields: 'name,account_id',
-                access_token: accessToken
-            }, function(response) {
-                if (response && !response.error) {
-                    if (!response.data || response.data.length === 0) {
-                        return reject(new Error("No Ad Accounts found associated with this user."));
-                    }
-                    
-                    // Use the first ad account found for simplicity
-                    const account = response.data[0];
-                    
-                    resolve({
-                        id: account.account_id,
-                        name: account.name,
-                        token: accessToken 
-                    });
-                } else {
-                    reject(new Error(response.error.message || "Unknown Meta API error during account fetch."));
-                }
-            });
-        });
+        const response = await fetch(API_META_ACCOUNTS);
+        
+        if (response.ok) {
+            const config = await response.json();
+            metaConnectionStatus.textContent = 'Connected';
+            metaConnectionStatus.classList.replace('bg-danger', 'bg-success');
+            metaLoginButton.disabled = true;
+            // Display the user's name (Harish Raj) or account name
+            metaLoginButton.textContent = `Active: ${config.account_name}`; 
+            
+            if (authStatusMessage) authStatusMessage.classList.add('d-none');
+            
+            // If connected, immediately load the forms list
+            fetchAndRenderForms(); 
+            loadMappingSection();
+        } else {
+            // No account found or 404 response
+            metaConnectionStatus.textContent = 'Disconnected';
+            metaConnectionStatus.classList.replace('bg-success', 'bg-danger');
+            metaLoginButton.disabled = false;
+            metaLoginButton.textContent = 'Connect with Facebook';
+        }
 
-    } catch (e) {
-        console.error("Error fetching Ad Account details:", e);
-        throw e;
+    } catch (error) {
+        console.error('Error checking Meta connection status:', error);
+        metaConnectionStatus.textContent = 'Error';
+        metaConnectionStatus.classList.replace('bg-success', 'bg-danger');
+        metaLoginButton.disabled = false;
+        metaLoginButton.textContent = 'Connect with Facebook';
     }
 }
 
@@ -241,7 +312,7 @@ function handleMetaLogin() {
             .then(saveResponse => {
                 if (saveResponse.ok) {
                     alert("Connection successful! Refreshing status...");
-                    checkMetaConnectionStatus(); // Refresh UI status
+                    checkMetaConnectionStatus();
                 } else {
                     return saveResponse.json().then(errorData => {
                          throw new Error(errorData.error || 'Failed to save configuration to CRM database.');
@@ -253,7 +324,7 @@ function handleMetaLogin() {
                 authStatusMessage.textContent = `Connection Failed: ${e.message}`;
                 authStatusMessage.classList.replace('text-muted', 'text-danger');
                 console.error('Meta Connection Error:', e);
-                metaLoginButton.disabled = false; // Re-enable button on failure
+                metaLoginButton.disabled = false;
             });
             
         } else {
@@ -268,50 +339,15 @@ function handleMetaLogin() {
 }
 
 
-/**
- * Checks the database for saved Meta account credentials using the dedicated API endpoint.
- */
-async function checkMetaConnectionStatus() {
-    try {
-        const response = await fetch(API_META_ACCOUNTS);
-        
-        if (response.ok) {
-            const config = await response.json();
-            metaConnectionStatus.textContent = 'Connected';
-            metaConnectionStatus.classList.replace('bg-danger', 'bg-success');
-            metaLoginButton.disabled = true;
-            metaLoginButton.textContent = `Active: ${config.account_name}`;
-            
-            if (authStatusMessage) authStatusMessage.classList.add('d-none');
-            
-            loadMappingSection();
-        } else {
-            // No account found or 404 response
-            metaConnectionStatus.textContent = 'Disconnected';
-            metaConnectionStatus.classList.replace('bg-success', 'bg-danger');
-            metaLoginButton.disabled = false;
-            metaLoginButton.textContent = 'Connect with Facebook';
-        }
-
-    } catch (error) {
-        console.error('Error checking Meta connection status:', error);
-            // Treat any fetch error as disconnected until proven otherwise
-        metaConnectionStatus.textContent = 'Error';
-        metaConnectionStatus.classList.replace('bg-success', 'bg-danger');
-        metaLoginButton.disabled = false;
-        metaLoginButton.textContent = 'Connect with Facebook';
-    }
-}
-
-
 // --- Event Listeners ---
 metaLoginButton.addEventListener('click', handleMetaLogin);
 if (metaMappingForm) metaMappingForm.addEventListener('submit', saveFieldMapping);
+if (loadFieldsButton) loadFieldsButton.addEventListener('click', handleLoadFields);
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // We rely on the FB.init callback in settings.html to call checkMetaConnectionStatus
-    // if the page is fully loaded.
+    // Initial check when the page loads
+    checkMetaConnectionStatus();
     
     // Check when the tab becomes active
     if (integrationsPane) {

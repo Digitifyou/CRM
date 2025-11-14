@@ -524,32 +524,7 @@
     </div>
 
 
-    <!-- Meta SDK initialization block -->
-    <script>
-        // CRITICAL: Replace 'YOUR_META_APP_ID_HERE' with your actual App ID
-        window.META_APP_ID = '1571347190947555'; 
-
-        // Load the Meta SDK asynchronousl
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : window.META_APP_ID,
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v19.0' // Use current Meta API version
-            });
-            // After initialization, check connection status
-            checkMetaConnectionStatus();
-        };
-
-        // Load the SDK script
-        (function(d, s, id){
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) {return;}
-            js = d.createElement(s); js.id = id;
-            js.src = "https://connect.facebook.net/en_US/sdk.js";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    </script>
+   
     
     <!-- Standard JS files -->
     <script src="/assets/js/settings_integrations.js"></script>
@@ -561,6 +536,39 @@
     <script src="/assets/js/settings_custom_fields.js"></script>
     <script src="/assets/js/settings_import.js"></script>
     
-    </body>
+    <!-- Meta SDK initialization block -->
+    <script>
+        // CRITICAL: App ID used for SDK initialization
+        window.META_APP_ID = '1170946974995892'; 
+
+        // Load the Meta SDK asynchronously
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : window.META_APP_ID,
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v19.0', 
+                status     : true, // IMPORTANT: Attempts to get login status on init
+                oauth      : true  // IMPORTANT: Enables OAuth flow handling
+            });
+            
+            // After initialization, check connection status
+            checkMetaConnectionStatus();
+        };
+
+        // Load the SDK script
+        (function(d, s, id){
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {return;}
+            js = d.createElement(s); js.id = id;
+            
+            // NOTE: Using window.location.protocol ensures the SDK loads using HTTPS
+            // when running via Ngrok, mitigating persistent caching errors.
+            js.src = window.location.protocol + "//connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+    
+</body>
 
 </html>

@@ -6,7 +6,6 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config.php'; 
 
 $method = $_SERVER['REQUEST_METHOD'];
-// NOTE: We assume the user ID 1 is setting up the connection.
 $admin_user_id = 1; 
 
 try {
@@ -30,6 +29,7 @@ try {
                     'ad_account_id' => $config['ad_account_id'],
                 ]);
             } else {
+                // If no record is found, return 404 (Disconnected state)
                 http_response_code(404);
                 echo json_encode(['connected' => false, 'error' => 'No active Meta account found.']);
             }
@@ -83,6 +83,7 @@ try {
     }
 
 } catch (\PDOException $e) {
+    // CRITICAL: Handle 500 error and prevent HTML output
     http_response_code(500);
     echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }

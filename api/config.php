@@ -24,10 +24,10 @@ try {
      exit;
 }
 
-// --- META API CREDENTIALS (NEW) ---
-// Your credentials MUST be defined here.
+// --- META API CREDENTIALS (PRODUCTION READY) ---
+// We are using the credentials you provided.
 define('META_APP_ID', '1170946974995892');
 define('META_APP_SECRET', '377431f42d7f0e4ba17dadbe867f329b');
-// This is the Facebook Page ID that your Lead Forms are tied to (required for Graph API calls)
+// Placeholder for the Facebook Page ID required for Webhooks/Leads
 define('META_PAGE_ID', 'YOUR_FACEBOOK_PAGE_ID'); 
 ?>
