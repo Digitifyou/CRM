@@ -8,18 +8,18 @@ if (session_status() == PHP_SESSION_NONE) {
 // --- END SESSION ---
 
 // --- DATABASE CONNECTION PARAMETERS ---
-// $host = 'localhost';
-// $db   = 'crm_academy';
-// $user = 'root';    
-// $pass = ''; 
-// $charset = 'utf8mb4';
+$host = 'localhost';
+$db   = 'crm_academy';
+$user = 'root';    
+$pass = ''; 
+$charset = 'utf8mb4';
 
 //  --- DATABASE CONNECTION PARAMETERS ---
-$host = 'mysql.hostinger.com';
-$db   = 'u230344840_crm';
-$user = 'u230344840_flowsystmz';    
-$pass = 'Flowsystmz@12'; 
-$charset = 'utf8mb4';
+// $host = 'mysql.hostinger.com';
+// $db   = 'u230344840_crm';
+// $user = 'u230344840_flowsystmz';    
+// $pass = 'Flowsystmz@12'; 
+// $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [

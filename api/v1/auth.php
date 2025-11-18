@@ -35,7 +35,7 @@ try {
     $user = $stmt->fetch();
 
     if (!$user) {
-        http_response_code(401); // Unauthorized
+        http_response_code(401); 
         echo json_encode(['error' => 'Invalid username or password.']);
         exit;
     }
@@ -45,7 +45,7 @@ try {
     $stored_hash = trim($user['password_hash']);
 
     if (!password_verify($password, $stored_hash)) {
-        http_response_code(401); // Unauthorized
+        http_response_code(401); 
         echo json_encode(['error' => 'Invalid username or password.']);
         exit;
     }
