@@ -1,3 +1,12 @@
+<?php
+// SECURITY CHECK: Ensure user is logged in
+require_once __DIR__ . '/api/config.php'; 
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.html');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,11 +25,11 @@
             <a class="navbar-brand" href="#">Training Academy CRM</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/students.html">Students</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/enrollments.html">Enrollments</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/settings.html">Settings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/meta_ads.html">Meta Ads</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.php">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/students.php">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/settings.php">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/meta_ads.php">Meta Ads</a></li>
                 </ul>
             </div>
         </div>
@@ -526,7 +535,6 @@
 
    
     
-    <!-- Standard JS files -->
     <script src="/assets/js/settings_integrations.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/settings_courses.js"></script>
@@ -536,7 +544,6 @@
     <script src="/assets/js/settings_custom_fields.js"></script>
     <script src="/assets/js/settings_import.js"></script>
     
-    <!-- Meta SDK initialization block -->
     <script>
         // CRITICAL: App ID used for SDK initialization
         window.META_APP_ID = '1170946974995892'; 

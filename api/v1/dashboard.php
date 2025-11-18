@@ -1,106 +1,150 @@
 <?php
-// /api/v1/dashboard.php
+// SECURITY CHECK: Ensure user is logged in
+require_once __DIR__ . '/api/config.php'; 
 
-header('Content-Type: application/json');
-require_once __DIR__ . '/../config.php'; // $pdo connection
-
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Helper: Get start/end of the current month
-$start_of_month = date('Y-m-01 00:00:00');
-$end_of_month = date('Y-m-t 23:59:59');
-
-// Helper: Get start/end of the current week (Monday to Sunday)
-$start_of_week = date('Y-m-d 00:00:00', strtotime('monday this week'));
-$end_of_week = date('Y-m-d 23:59:59', strtotime('sunday this week'));
-$today_start = date('Y-m-d 00:00:00');
-$today_end = date('Y-m-d 23:59:59');
-
-
-if ($method !== 'GET') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method Not Allowed']);
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.html');
     exit;
 }
-
-try {
-    $dashboardData = [];
-
-    // --- KPI 1: New Inquiries (Today/This Week) ---
-    $stmt_today = $pdo->prepare("SELECT COUNT(student_id) FROM students WHERE created_at BETWEEN ? AND ?");
-    $stmt_today->execute([$today_start, $today_end]);
-    $dashboardData['new_inquiries_today'] = (int)$stmt_today->fetchColumn();
-    
-    $stmt_week = $pdo->prepare("SELECT COUNT(student_id) FROM students WHERE created_at BETWEEN ? AND ?");
-    $stmt_week->execute([$start_of_week, $end_of_week]);
-    $dashboardData['new_inquiries_week'] = (int)$stmt_week->fetchColumn();
-
-    // --- KPI 2: Total Enrollments (This Month) & Fees Collected ---
-    // Note: We define 'enrolled' as status='enrolled'
-    $stmt_enrollments = $pdo->prepare("
-        SELECT 
-            COUNT(enrollment_id) as total_enrollments, 
-            COALESCE(SUM(total_fee_paid), 0) as total_fees_paid 
-        FROM enrollments 
-        WHERE status = 'enrolled' AND created_at BETWEEN ? AND ?
-    ");
-    $stmt_enrollments->execute([$start_of_month, $end_of_month]);
-    $monthlyStats = $stmt_enrollments->fetch();
-    
-    $dashboardData['enrollments_this_month'] = (int)$monthlyStats['total_enrollments'];
-    $dashboardData['fees_collected_this_month'] = (float)$monthlyStats['total_fees_paid'];
-
-    // --- Admissions Funnel Data ---
-    $funnel_query = $pdo->query("
-        SELECT 
-            ps.stage_name, 
-            ps.stage_order, 
-            COUNT(e.enrollment_id) AS student_count
-        FROM pipeline_stages ps
-        LEFT JOIN enrollments e ON ps.stage_id = e.pipeline_stage_id AND e.status = 'open'
-        GROUP BY ps.stage_id, ps.stage_name, ps.stage_order
-        ORDER BY ps.stage_order ASC
-    ");
-    $funnel_data = $funnel_query->fetchAll();
-    
-    $total_open_inquiries = array_sum(array_column($funnel_data, 'student_count'));
-
-    // --- KPI 3: Inquiry-to-Enrollment % (Conversion Rate) ---
-    // Simple calculation: (Monthly Enrollments) / (Total Monthly Leads in Stage 1)
-    // For MVP, we'll use a simplified version: (Monthly Enrollments) / (Total Open Inquiries)
-    $stmt_total_inquiries = $pdo->prepare("SELECT COUNT(student_id) FROM students WHERE created_at BETWEEN ? AND ?");
-    $stmt_total_inquiries->execute([$start_of_month, $end_of_month]);
-    $total_monthly_leads = (int)$stmt_total_inquiries->fetchColumn();
-
-    $conversion_rate = 0;
-    if ($total_monthly_leads > 0) {
-        $conversion_rate = ($dashboardData['enrollments_this_month'] / $total_monthly_leads) * 100;
-    }
-
-    $dashboardData['conversion_rate'] = round($conversion_rate, 2);
-    $dashboardData['funnel_data'] = $funnel_data;
-    
-    // --- Batch Status (NEW) ---
-    $batch_query = $pdo->query("
-        SELECT 
-            b.batch_name,
-            b.start_date,
-            b.total_seats,
-            b.filled_seats,
-            c.course_name
-        FROM batches b
-        JOIN courses c ON b.course_id = c.course_id
-        WHERE b.start_date >= CURDATE()
-        ORDER BY b.start_date ASC
-        LIMIT 5
-    ");
-    $dashboardData['upcoming_batches'] = $batch_query->fetchAll();
-
-
-    echo json_encode($dashboardData);
-
-} catch (\PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
-}
+// Retrieve user details from session for display
+$user_name = $_SESSION['full_name'] ?? 'Admin User';
 ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .kpi-card {
+            min-height: 120px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Training Academy CRM</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard.php">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/students.php">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/meta_ads.php">Meta Ads</a></li>
+                </ul>
+                <a href="/logout.php" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid px-4">
+        <h2 class="mb-4">Welcome, <?php echo $user_name; ?>!</h2>
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card kpi-card bg-info text-white shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">New Inquiries</h5>
+                        <h3 class="card-text" id="kpi-inquiries-today">0</h3>
+                        <p class="card-text"><small id="kpi-inquiries-week">0 this week</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card kpi-card bg-success text-white shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Enrollments (MoM)</h5>
+                        <h3 class="card-text" id="kpi-enrollments">0</h3>
+                        <p class="card-text"><small>This month</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card kpi-card bg-warning text-dark shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Inquiry-to-Enrollment %</h5>
+                        <h3 class="card-text" id="kpi-conversion">0%</h3>
+                        <p class="card-text"><small>Rolling month</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card kpi-card bg-primary text-white shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Fees Collected (MoM)</h5>
+                        <h3 class="card-text" id="kpi-fees">₹0</h3>
+                        <p class="card-text"><small>This month</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-7 mb-4">
+                <div class="card shadow">
+                    <div class="card-header">
+                        Admissions Pipeline Funnel (Open Deals)
+                    </div>
+                    <div class="card-body">
+                        <canvas id="admissionsFunnelChart" style="max-height: 400px;"></canvas>
+                        <div class="text-center text-muted mt-3" id="funnel-loading">Loading funnel data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mb-4">
+                <div class="card shadow">
+                    <div class="card-header">
+                        Upcoming Batch Status
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Batch</th>
+                                    <th>Course</th>
+                                    <th>Start Date</th>
+                                    <th>Seats</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-status-table">
+                                <tr><td colspan="4" class="text-center text-muted">Loading batches...</td></tr>
+                            </tbody>
+                        </table>
+                        
+                        <h6 class="mt-4">Quick Links</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item"><a href="/students.php">
+                                <i class="bi bi-person-plus me-2"></i> View All Leads/Students</a>
+                            </li>
+                            <li class="list-group-item"><a href="/enrollments.php">
+                                <i class="bi bi-bar-chart me-2"></i> Manage Enrollment Pipeline</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/dashboard-charts.js" defer></script>
+</body>
+
+</html>

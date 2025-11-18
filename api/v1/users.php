@@ -6,10 +6,6 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// NOTE: Password hashing is complex and should use a dedicated security library.
-// For this MVP, we only allow getting/updating users and creating the *initial* admin.
-// A dedicated user registration/invitation flow would be needed for production.
-
 try {
     switch ($method) {
         // --- READ (Get all users) ---

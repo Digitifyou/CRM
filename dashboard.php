@@ -1,3 +1,14 @@
+<?php
+// SECURITY CHECK: Ensure user is logged in
+require_once __DIR__ . '/api/config.php'; 
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.html');
+    exit;
+}
+// Retrieve user details from session for display
+$user_name = $_SESSION['full_name'] ?? 'Admin User';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,17 +36,21 @@
             <a class="navbar-brand" href="#">Training Academy CRM</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link active" href="/dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/students.html">Students</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/enrollments.html">Enrollments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/settings.html">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard.php">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/students.php">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/meta_ads.php">Meta Ads</a></li>
                 </ul>
+                <a href="/logout.php" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
             </div>
         </div>
     </nav>
 
     <main class="container-fluid px-4">
-        <h2 class="mb-4">Welcome, Admin User!</h2>
+        <h2 class="mb-4">Welcome, <?php echo $user_name; ?>!</h2>
 
         <div class="row mb-4">
             <div class="col-md-3">
@@ -114,8 +129,12 @@
                         
                         <h6 class="mt-4">Quick Links</h6>
                         <ul class="list-group">
-                            <li class="list-group-item"><a href="/students.html"><i class="bi bi-person-plus me-2"></i> View All Leads/Students</a></li>
-                            <li class="list-group-item"><a href="/enrollments.html"><i class="bi bi-bar-chart me-2"></i> Manage Enrollment Pipeline</a></li>
+                            <li class="list-group-item"><a href="/students.php">
+                                <i class="bi bi-person-plus me-2"></i> View All Leads/Students</a>
+                            </li>
+                            <li class="list-group-item"><a href="/enrollments.php">
+                                <i class="bi bi-bar-chart me-2"></i> Manage Enrollment Pipeline</a>
+                            </li>
                         </ul>
                     </div>
                 </div>

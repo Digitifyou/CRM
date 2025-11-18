@@ -45,8 +45,8 @@ try {
                  exit;
             }
             
-            // Placeholder: In a real app, the logged-in user ID would be retrieved from a session/token.
-            $user_id = 1; 
+            // Placeholder: Use the logged-in user ID from session
+            $user_id = $_SESSION['user_id'] ?? 1; 
 
             $sql = "INSERT INTO activity_log 
                         (student_id, user_id, activity_type, content) 

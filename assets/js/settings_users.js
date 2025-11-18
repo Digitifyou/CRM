@@ -164,7 +164,7 @@ usersPane.addEventListener('show.bs.tab', loadUsers);
 
 document.addEventListener('DOMContentLoaded', () => {
     // Only load if the Users tab is the active one on initial load
-    if (usersPane.classList.contains('active')) {
+    if (usersPane && usersPane.classList.contains('active')) {
         loadUsers();
     }
 

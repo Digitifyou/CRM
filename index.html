@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowSystmz CRM - The Ultimate Institute Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern SVG icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for mockups */
+        .mockup-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .mockup-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .mockup-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-100 selection:text-brand-900">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 glass-effect border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="bg-brand-600 text-white p-1.5 rounded-lg">
+                        <i class="ph-fill ph-graduation-cap text-2xl"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">Flow<span class="text-brand-600">Systmz</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#dashboard" class="text-slate-600 hover:text-brand-600 font-medium transition">Dashboard</a>
+                    <a href="#students" class="text-slate-600 hover:text-brand-600 font-medium transition">Students</a>
+                    <a href="#pipeline" class="text-slate-600 hover:text-brand-600 font-medium transition">Pipeline</a>
+                    <a href="#pricing" class="text-slate-600 hover:text-brand-600 font-medium transition">Pricing</a>
+                </div>
+                <button class="bg-slate-900 text-white px-5 py-2 rounded-lg font-medium hover:bg-slate-800 transition shadow-lg shadow-slate-900/20">
+                    Get Started
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-sm font-semibold mb-6 animate-fade-in-up">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                </span>
+                v1.0 MVP Now Live
+            </div>
+            <h1 class="text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">
+                Turn Inquiries into <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-blue-600">Enrollments.</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+                The CRM built specifically for training institutes. Manage leads, track admissions, and automate follow-ups in one unified platform.
+            </p>
+            <div class="flex justify-center gap-4 mb-16">
+                <button class="bg-brand-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center gap-2">
+                    Start Free Trial <i class="ph-bold ph-arrow-right"></i>
+                </button>
+                <button class="bg-white text-slate-700 border border-slate-300 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition flex items-center gap-2">
+                    <i class="ph-fill ph-play-circle text-slate-400"></i> Watch Demo
+                </button>
+            </div>
+
+            <!-- Hero Dashboard Mockup -->
+            <div class="relative max-w-5xl mx-auto">
+                <div class="absolute -inset-1 bg-gradient-to-r from-brand-400 to-blue-400 rounded-2xl blur opacity-20"></div>
+                <div class="relative bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden">
+                    <!-- Fake Browser Bar -->
+                    <div class="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <div class="ml-4 bg-white px-3 py-1 rounded text-xs text-slate-500 flex-1 max-w-xs border border-slate-200 flex items-center gap-2">
+                            <i class="ph-bold ph-lock-key"></i> app.flowsystmz.com/dashboard
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Content Mockup -->
+                    <div class="p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
+                        <!-- Stats Column -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <div class="text-blue-600 text-sm font-semibold mb-1">Inquiries (Today)</div>
+                                    <div class="text-3xl font-bold text-slate-900">12</div>
+                                    <div class="text-xs text-blue-500 mt-1">↑ 4 vs yesterday</div>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                                    <div class="text-green-600 text-sm font-semibold mb-1">Enrollments</div>
+                                    <div class="text-3xl font-bold text-slate-900">48</div>
+                                    <div class="text-xs text-green-500 mt-1">This Month</div>
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                    <div class="text-purple-600 text-sm font-semibold mb-1">Revenue</div>
+                                    <div class="text-3xl font-bold text-slate-900">$12.5k</div>
+                                    <div class="text-xs text-purple-500 mt-1">Fees Collected</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Funnel Chart Visualization -->
+                            <div class="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
+                                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-funnel text-brand-500"></i> Admissions Funnel
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center group cursor-pointer">
+                                        <div class="w-24 text-xs font-medium text-slate-500">Inquiry (150)</div>
+                                        <div class="flex-1 h-8 bg-slate-100 rounded-r-lg overflow-hidden relative">
+                                            <div class="absolute top-0 left-0 h-full bg-blue-500 w-[100%] rounded-r-lg opacity-80 group-hover:opacity-100 transition"></div>
+                                            <div class="absolute right-2 top-1.5 text-xs font-bold text-white">100%</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center group cursor-pointer">
+                                        <div class="w-24 text-xs font-medium text-slate-500">Counseled (90)</div>
+                                        <div class="flex-1 h-8 bg-slate-100 rounded-r-lg overflow-hidden relative">
+                                            <div class="absolute top-0 left-0 h-full bg-blue-500 w-[60%] rounded-r-lg opacity-80 group-hover:opacity-100 transition"></div>
+                                            <div class="absolute right-[42%] top-1.5 text-xs font-bold text-slate-600">60%</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center group cursor-pointer">
+                                        <div class="w-24 text-xs font-medium text-slate-500">Demo (45)</div>
+                                        <div class="flex-1 h-8 bg-slate-100 rounded-r-lg overflow-hidden relative">
+                                            <div class="absolute top-0 left-0 h-full bg-brand-500 w-[30%] rounded-r-lg opacity-80 group-hover:opacity-100 transition"></div>
+                                            <div class="absolute right-[72%] top-1.5 text-xs font-bold text-slate-600">30%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Batch Status Sidebar -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm">Upcoming Batches</h3>
+                            <div class="space-y-3">
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-xs font-bold text-slate-700">Full Stack Java</span>
+                                        <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Start: Mon</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                                        <span>Seats</span>
+                                        <span>18/25 Filled</span>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-500 w-[72%]"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-xs font-bold text-slate-700">Digital Marketing</span>
+                                        <span class="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Start: Oct 15</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                                        <span>Seats</span>
+                                        <span>5/20 Filled</span>
+                                    </div>
+                                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-orange-400 w-[25%]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: Student & Lead Module -->
+    <section id="students" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                <div class="lg:w-1/2 order-2 lg:order-1">
+                     <!-- Profile Card Mockup -->
+                     <div class="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden relative">
+                        <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-brand-500 flex items-center justify-center font-bold text-lg">RP</div>
+                                <div>
+                                    <h3 class="font-bold leading-none">Rahul Patil</h3>
+                                    <span class="text-xs text-slate-400">rahul.p@gmail.com</span>
+                                </div>
+                            </div>
+                            <span class="bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 px-2 py-1 rounded text-xs font-semibold">
+                                Lead Score: 85/100
+                            </span>
+                        </div>
+                        <div class="p-6 grid grid-cols-2 gap-6">
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
+                                <div class="flex items-center gap-2 text-sm font-medium text-slate-800 bg-slate-100 px-3 py-2 rounded-lg">
+                                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Inquiry
+                                </div>
+                            </div>
+                            <div class="col-span-2 sm:col-span-1">
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Interested Course</label>
+                                <div class="text-sm font-medium text-slate-800 bg-slate-100 px-3 py-2 rounded-lg">Data Science</div>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Activity Timeline</label>
+                                <div class="space-y-3 pl-2 border-l-2 border-slate-200">
+                                    <div class="relative pl-4">
+                                        <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-brand-500"></div>
+                                        <p class="text-xs text-slate-500">Today, 10:30 AM</p>
+                                        <p class="text-sm text-slate-800">Counselor added note: "Interested in weekend batch only."</p>
+                                    </div>
+                                    <div class="relative pl-4">
+                                        <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-slate-300"></div>
+                                        <p class="text-xs text-slate-500">Yesterday, 4:15 PM</p>
+                                        <p class="text-sm text-slate-800">System sent "Course Syllabus" email.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Floating Edit Button -->
+                        <div class="absolute bottom-4 right-4 bg-brand-600 text-white p-3 rounded-full shadow-lg cursor-pointer hover:bg-brand-700">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 order-1 lg:order-2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-sm font-semibold mb-4">
+                        <i class="ph-fill ph-users"></i> Student & Lead Module
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Know your students inside out.</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        Move beyond spreadsheets. Capture every detail from lead source to qualification in a structured, searchable database.
+                    </p>
+                    <ul class="space-y-3 text-slate-700">
+                        <li class="flex items-start gap-3">
+                            <i class="ph-fill ph-check-circle text-green-500 text-xl mt-0.5"></i>
+                            <span><strong>Lead Scoring:</strong> Automatically identify high-intent leads based on activity.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="ph-fill ph-check-circle text-green-500 text-xl mt-0.5"></i>
+                            <span><strong>360° Profile:</strong> See enrollment history, fee status, and communication logs in one view.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="ph-fill ph-check-circle text-green-500 text-xl mt-0.5"></i>
+                            <span><strong>Custom Fields:</strong> Add fields like "Work Experience" or "Lead Source" to fit your process.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: Enrollments (Kanban) -->
+    <section id="pipeline" class="py-20 bg-slate-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4">
+                    <i class="ph-fill ph-kanban"></i> Enrollment Module
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Visualize your Admissions Pipeline.</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    Drag and drop students through your custom enrollment stages. Never let a follow-up slip through the cracks.
+                </p>
+            </div>
+
+            <!-- Kanban Mockup -->
+            <div class="bg-slate-200 p-4 rounded-xl overflow-x-auto pb-6 shadow-inner">
+                <div class="flex gap-4 min-w-[1000px]">
+                    <!-- Column 1 -->
+                    <div class="w-1/4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="font-bold text-slate-700 text-sm uppercase">New Inquiry</span>
+                            <span class="bg-slate-300 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+                        </div>
+                        <!-- Card -->
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-300 cursor-grab active:cursor-grabbing hover:shadow-md transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-slate-800 text-sm">John Doe</span>
+                                <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Meta Ad</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2">Interested in Java Full Stack</p>
+                            <div class="flex justify-between items-center text-xs border-t border-slate-100 pt-2">
+                                <span class="text-red-500 font-medium"><i class="ph-bold ph-clock"></i> Due Today</span>
+                                <div class="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">JD</div>
+                            </div>
+                        </div>
+                        <!-- Card -->
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-300 cursor-grab active:cursor-grabbing hover:shadow-md transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-slate-800 text-sm">Sarah Smith</span>
+                                <span class="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Walk-in</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2">Inquired about fees</p>
+                        </div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="w-1/4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="font-bold text-slate-700 text-sm uppercase">Demo Scheduled</span>
+                            <span class="bg-slate-300 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">1</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-l-4 border-l-yellow-400 border-y border-r border-slate-300 cursor-grab active:cursor-grabbing">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-slate-800 text-sm">Mike Ross</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2">Scheduled for Sat, 2 PM</p>
+                            <div class="flex gap-1 mt-2">
+                                <button class="text-[10px] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-600">Reschedule</button>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Column 3 -->
+                     <div class="w-1/4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="font-bold text-slate-700 text-sm uppercase">Payment Pending</span>
+                            <span class="bg-slate-300 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">2</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-300 cursor-grab active:cursor-grabbing">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-slate-800 text-sm">Anita Roy</span>
+                                <span class="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">$500 Due</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-2">Waiting for loan approval</p>
+                        </div>
+                    </div>
+
+                     <!-- Column 4 -->
+                     <div class="w-1/4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="font-bold text-green-700 text-sm uppercase">Enrolled</span>
+                            <span class="bg-green-200 text-green-800 text-xs font-bold px-2 py-0.5 rounded-full">5</span>
+                        </div>
+                         <!-- Ghost Card -->
+                         <div class="border-2 border-dashed border-slate-300 p-3 rounded-lg flex items-center justify-center h-24">
+                             <span class="text-slate-400 text-xs">Drag "Won" deals here</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 4: Settings & Admin -->
+    <section id="settings" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="md:w-1/2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold mb-4">
+                        <i class="ph-fill ph-gear"></i> Settings Module
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Total Control for Owners.</h2>
+                    <p class="text-lg text-slate-600 mb-8">
+                        Configure the system to match your institute's unique workflow without writing a single line of code.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="flex gap-3">
+                            <div class="bg-brand-100 text-brand-600 p-2 rounded-lg h-fit"><i class="ph-bold ph-sliders text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Pipeline Editor</h4>
+                                <p class="text-sm text-slate-600">Add, rename, or reorder enrollment stages.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="bg-brand-100 text-brand-600 p-2 rounded-lg h-fit"><i class="ph-bold ph-shield-check text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">User Permissions</h4>
+                                <p class="text-sm text-slate-600">Control what counselors and trainers can see.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="bg-brand-100 text-brand-600 p-2 rounded-lg h-fit"><i class="ph-bold ph-books text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Course Management</h4>
+                                <p class="text-sm text-slate-600">Set fees, durations, and batches.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="bg-brand-100 text-brand-600 p-2 rounded-lg h-fit"><i class="ph-bold ph-plugs text-xl"></i></div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Integrations</h4>
+                                <p class="text-sm text-slate-600">Connect Meta Ads & Website Forms directly.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 w-full">
+                    <!-- Settings Mockup -->
+                    <div class="bg-slate-50 rounded-xl border border-slate-200 p-6 shadow-lg">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                                <div>
+                                    <h3 class="font-bold text-slate-900">Pipeline Stages</h3>
+                                    <p class="text-xs text-slate-500">Customize your admissions funnel</p>
+                                </div>
+                                <button class="text-xs bg-brand-600 text-white px-3 py-1.5 rounded font-medium">+ Add Stage</button>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-3 bg-white p-3 rounded border border-slate-200">
+                                    <i class="ph-bold ph-dots-six-vertical text-slate-400 cursor-move"></i>
+                                    <input type="text" value="New Inquiry" class="text-sm font-medium text-slate-700 outline-none w-full">
+                                    <div class="w-3 h-3 rounded-full bg-slate-400"></div>
+                                </div>
+                                <div class="flex items-center gap-3 bg-white p-3 rounded border border-slate-200">
+                                    <i class="ph-bold ph-dots-six-vertical text-slate-400 cursor-move"></i>
+                                    <input type="text" value="Demo Attended" class="text-sm font-medium text-slate-700 outline-none w-full">
+                                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                </div>
+                                <div class="flex items-center gap-3 bg-white p-3 rounded border border-slate-200">
+                                    <i class="ph-bold ph-dots-six-vertical text-slate-400 cursor-move"></i>
+                                    <input type="text" value="Enrolled" class="text-sm font-medium text-slate-700 outline-none w-full">
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof / Testimonials -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-sm font-semibold mb-4">
+                    <i class="ph-fill ph-star"></i> Trusted by Institutes
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">Don't take our word for it.</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6 italic">"Our inquiry-to-enrollment ratio went up by 30% in just two months. The follow-up reminders are a game changer."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">VS</div>
+                        <div>
+                            <div class="font-bold text-slate-900">Vikram Singh</div>
+                            <div class="text-xs text-slate-500">Director, Apex Coding Academy</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6 italic">"Finally, I know exactly where my marketing money is going. The lead source tracking is fantastic."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">SJ</div>
+                        <div>
+                            <div class="font-bold text-slate-900">Sarah Jenkins</div>
+                            <div class="text-xs text-slate-500">Owner, English Edge</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star-half"></i>
+                    </div>
+                    <p class="text-slate-600 mb-6 italic">"We replaced 5 different Excel sheets with FlowSystmz. The batch management feature alone saves me 10 hours a week."</p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">RM</div>
+                        <div>
+                            <div class="font-bold text-slate-900">Rahul Mehta</div>
+                            <div class="text-xs text-slate-500">Founder, Design School</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Simple, transparent pricing.</h2>
+                <p class="text-lg text-slate-600">No setup fees. No hidden charges. Cancel anytime.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-center gap-8 max-w-4xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="flex-1 bg-white border border-slate-200 rounded-2xl p-8 hover:border-brand-300 transition relative">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Starter</h3>
+                    <p class="text-sm text-slate-500 mb-6">Perfect for small institutes just starting out.</p>
+                    <div class="text-4xl font-extrabold text-slate-900 mb-6">Free <span class="text-lg font-normal text-slate-500">/ forever</span></div>
+                    
+                    <ul class="space-y-4 mb-8 text-sm text-slate-700">
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-green-500 text-lg"></i> Up to 100 Leads</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-green-500 text-lg"></i> Basic Pipeline Board</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-green-500 text-lg"></i> 1 User Account</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-green-500 text-lg"></i> Standard Support</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:bg-slate-50 transition">Start for Free</button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="flex-1 bg-slate-900 border border-slate-900 rounded-2xl p-8 text-white relative transform md:-translate-y-4 shadow-xl">
+                    <div class="absolute top-0 right-0 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl uppercase tracking-wide">Most Popular</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Growth</h3>
+                    <p class="text-sm text-slate-400 mb-6">Everything you need to scale your admissions.</p>
+                    <div class="text-4xl font-extrabold text-white mb-6">$49 <span class="text-lg font-normal text-slate-400">/ month</span></div>
+                    
+                    <ul class="space-y-4 mb-8 text-sm text-slate-300">
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-brand-400 text-lg"></i> Unlimited Leads & Students</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-brand-400 text-lg"></i> Advanced Reporting</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-brand-400 text-lg"></i> up to 5 Team Members</li>
+                        <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-brand-400 text-lg"></i> Meta Ads Integration</li>
+                    </ul>
+                    <button class="w-full py-3 rounded-xl bg-brand-600 font-bold text-white hover:bg-brand-500 transition shadow-lg shadow-brand-900/50">Get Started Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-20 bg-slate-50">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-slate-900 text-center mb-12">Frequently Asked Questions</h2>
+            
+            <div class="space-y-6">
+                <!-- FAQ Item -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-slate-900 mb-2 text-lg">Is my student data secure?</h4>
+                    <p class="text-slate-600">Absolutely. We use bank-grade encryption for all data. Your student list is yours alone; we never sell or share data with third parties.</p>
+                </div>
+                <!-- FAQ Item -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-slate-900 mb-2 text-lg">Can I import my existing Excel sheets?</h4>
+                    <p class="text-slate-600">Yes! We have a one-click CSV import tool. Map your columns (Name, Phone, Course) and you'll be up and running in minutes.</p>
+                </div>
+                <!-- FAQ Item -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h4 class="font-bold text-slate-900 mb-2 text-lg">Do you offer a mobile app?</h4>
+                    <p class="text-slate-600">FlowSystmz is a "Progressive Web App" (PWA). This means it works perfectly on your mobile browser and can be installed on your home screen just like an app.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-slate-900 text-white">
+        <div class="max-w-4xl mx-auto text-center px-4">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to fill your batches?</h2>
+            <p class="text-slate-300 text-lg mb-10">Join 500+ institute owners who are saving 20 hours a week with FlowSystmz CRM.</p>
+            <form class="max-w-md mx-auto flex flex-col sm:flex-row gap-3">
+                <input type="email" placeholder="Enter your email" class="flex-1 px-5 py-3 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-3 rounded-lg transition whitespace-nowrap">
+                    Get Early Access
+                </button>
+            </form>
+            <p class="text-slate-500 text-sm mt-4">No credit card required. 14-day free trial.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center gap-2 mb-4 md:mb-0">
+                <div class="bg-slate-900 text-white p-1 rounded">
+                    <i class="ph-fill ph-graduation-cap text-lg"></i>
+                </div>
+                <span class="font-bold text-lg text-slate-900">Flow<span class="text-brand-600">Systmz</span></span>
+            </div>
+            <div class="text-slate-500 text-sm">
+                &copy; 2023 FlowSystmz. All rights reserved.
+            </div>
+            <div class="flex gap-6 mt-4 md:mt-0">
+                <a href="#" class="text-slate-400 hover:text-brand-600 transition"><i class="ph-fill ph-twitter-logo text-xl"></i></a>
+                <a href="#" class="text-slate-400 hover:text-brand-600 transition"><i class="ph-fill ph-linkedin-logo text-xl"></i></a>
+                <a href="#" class="text-slate-400 hover:text-brand-600 transition"><i class="ph-fill ph-instagram-logo text-xl"></i></a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

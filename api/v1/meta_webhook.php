@@ -82,116 +82,116 @@ function fetchLiveLeadData($leadgen_id, $access_token) {
  * @param array $fieldMapping The mapping rules from DB.
  */
 function processAndCreateLead($pdo, $metaLeadData, $fieldMapping) {
-    
-    // 1. Map and Flatten Data
-    $leadData = [
-        'full_name' => null, 
-        'email' => null, 
-        'phone' => null, 
-        'course_interested_id' => null,
-        'lead_source' => DEFAULT_LEAD_SOURCE,
-        'qualification' => null, 
-        'work_experience' => null, 
-        'custom_data' => []
-    ];
-    $custom_data = [];
-    
-    // Meta fields are in 'field_data'
-    if (isset($metaLeadData['field_data'])) {
-        foreach ($metaLeadData['field_data'] as $field) {
-            $meta_field_name = $field['name'];
-            $value = $field['values'][0] ?? null; // Assume single value for now
-            
-            $crm_field_key = $fieldMapping[$meta_field_name] ?? null;
-            
-            if ($crm_field_key) {
-                // Check against built-in fields
-                if (in_array($crm_field_key, ['full_name', 'email', 'phone', 'lead_source', 'qualification', 'work_experience'])) {
-                    $leadData[$crm_field_key] = $value;
-                } else if ($crm_field_key === 'course_interested_id') {
-                    // Requires complex mapping/lookup, but for MVP, we assume the value is the ID.
-                    $leadData[$crm_field_key] = $value; 
-                } else {
-                    // Custom fields stored in JSON
-                    $custom_data[$crm_field_key] = $value;
+    try {
+        // 1. Map and Flatten Data
+        $leadData = [
+            'full_name' => null, 
+            'email' => null, 
+            'phone' => null, 
+            'course_interested_id' => null,
+            'lead_source' => DEFAULT_LEAD_SOURCE,
+            'qualification' => null, 
+            'work_experience' => null, 
+            'custom_data' => []
+        ];
+        $custom_data = [];
+        
+        // Meta fields are in 'field_data'
+        if (isset($metaLeadData['field_data'])) {
+            foreach ($metaLeadData['field_data'] as $field) {
+                $meta_field_name = $field['name'];
+                $value = $field['values'][0] ?? null; // Assume single value for now
+                
+                $crm_field_key = $fieldMapping[$meta_field_name] ?? null;
+                
+                if ($crm_field_key) {
+                    // Check against built-in fields
+                    if (in_array($crm_field_key, ['full_name', 'email', 'phone', 'lead_source', 'qualification', 'work_experience'])) {
+                        $leadData[$crm_field_key] = $value;
+                    } else if ($crm_field_key === 'course_interested_id') {
+                        // Requires complex mapping/lookup, but for MVP, we assume the value is the ID.
+                        $leadData[$crm_field_key] = $value; 
+                    } else {
+                        // Custom fields stored in JSON
+                        $custom_data[$crm_field_key] = $value;
+                    }
                 }
             }
         }
-    }
-    $leadData['custom_data'] = $custom_data;
-
-    // Basic validation
-    if (empty($leadData['full_name']) && empty($leadData['phone'])) {
-         http_response_code(400); 
-         echo json_encode(['error' => 'Lead missing essential contact fields (Full Name or Phone).']);
-         exit;
-    }
+        $leadData['custom_data'] = $custom_data;
     
-    // --- Determine Course ID and Fee (Requires clean value for 'course_interested_id') ---
-    $course_id = $leadData['course_interested_id'] ? (int)$leadData['course_interested_id'] : null;
-    $course_fee = 0;
-
-    if ($course_id) {
-         $fee_stmt = $pdo->prepare("SELECT standard_fee FROM courses WHERE course_id = ?");
-         $fee_stmt->execute([$course_id]);
-         $course_fee = $fee_stmt->fetchColumn() ?: 0;
-    }
+        // Basic validation
+        if (empty($leadData['full_name']) && empty($leadData['phone'])) {
+             http_response_code(400); 
+             echo json_encode(['error' => 'Lead missing essential contact fields (Full Name or Phone).']);
+             exit;
+        }
+        
+        // --- Determine Course ID and Fee (Requires clean value for 'course_interested_id') ---
+        $course_id = $leadData['course_interested_id'] ? (int)$leadData['course_interested_id'] : null;
+        $course_fee = 0;
     
-    // --- Create Student Record ---
-    $sql = "INSERT INTO students 
-                (full_name, email, phone, status, course_interested_id, lead_source, qualification, work_experience, custom_data) 
-            VALUES 
-                (?, ?, ?, 'inquiry', ?, ?, ?, ?, ?)";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        $leadData['full_name'],
-        $leadData['email'] ?? null,
-        $leadData['phone'] ?? null,
-        $course_id,
-        $leadData['lead_source'] ?? DEFAULT_LEAD_SOURCE,
-        $leadData['qualification'] ?? null,
-        $leadData['work_experience'] ?? null,
-        json_encode($leadData['custom_data'])
-    ]);
-    
-    $new_id = $pdo->lastInsertId();
-    
-    // --- Trigger Scoring ---
-    calculateAndUpdateLeadScoreInline($pdo, $new_id, $leadData);
-    
-    // --- Create Enrollment Record ---
-    $stage_stmt = $pdo->query("SELECT stage_id FROM pipeline_stages ORDER BY stage_order ASC LIMIT 1");
-    $first_stage_id = $stage_stmt->fetchColumn();
-    $admin_user_id = 1; 
-
-    if ($first_stage_id) {
-         $enroll_sql = "INSERT INTO enrollments 
-                            (student_id, course_id, assigned_to_user_id, pipeline_stage_id, total_fee_agreed) 
-                        VALUES 
-                            (?, ?, ?, ?, ?)";
-         $enroll_stmt = $pdo->prepare($enroll_sql);
-         $enroll_stmt->execute([
-            $new_id,
+        if ($course_id) {
+             $fee_stmt = $pdo->prepare("SELECT standard_fee FROM courses WHERE course_id = ?");
+             $fee_stmt->execute([$course_id]);
+             $course_fee = $fee_stmt->fetchColumn() ?: 0;
+        }
+        
+        // --- Create Student Record ---
+        $sql = "INSERT INTO students 
+                    (full_name, email, phone, status, course_interested_id, lead_source, qualification, work_experience, custom_data) 
+                VALUES 
+                    (?, ?, ?, 'inquiry', ?, ?, ?, ?, ?)";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            $leadData['full_name'],
+            $leadData['email'] ?? null,
+            $leadData['phone'] ?? null,
             $course_id,
-            $admin_user_id,
-            $first_stage_id,
-            $course_fee
-         ]);
-    }
+            $leadData['lead_source'] ?? DEFAULT_LEAD_SOURCE,
+            $leadData['qualification'] ?? null,
+            $leadData['work_experience'] ?? null,
+            json_encode($leadData['custom_data'])
+        ]);
+        
+        $new_id = $pdo->lastInsertId();
+        
+        // --- Trigger Scoring ---
+        calculateAndUpdateLeadScoreInline($pdo, $new_id, $leadData);
+        
+        // --- Create Enrollment Record ---
+        $stage_stmt = $pdo->query("SELECT stage_id FROM pipeline_stages ORDER BY stage_order ASC LIMIT 1");
+        $first_stage_id = $stage_stmt->fetchColumn();
+        $admin_user_id = 1; 
     
-    http_response_code(201);
-    // Note: Meta webhooks expect a 200/201 HTTP status code to acknowledge receipt.
-    echo json_encode(['success' => true, 'message' => 'Lead created and scored.', 'student_id' => $new_id]);
-
-} catch (\PDOException $e) {
-    if ($e->getCode() == 23000) { 
-        http_response_code(409);
-        echo json_encode(['error' => 'Lead already exists (Duplicate phone or email).']);
-        exit;
+        if ($first_stage_id) {
+             $enroll_sql = "INSERT INTO enrollments 
+                                (student_id, course_id, assigned_to_user_id, pipeline_stage_id, total_fee_agreed) 
+                            VALUES 
+                                (?, ?, ?, ?, ?)";
+             $enroll_stmt = $pdo->prepare($enroll_sql);
+             $enroll_stmt->execute([
+                $new_id,
+                $course_id,
+                $admin_user_id,
+                $first_stage_id,
+                $course_fee
+             ]);
+        }
+        
+        http_response_code(201);
+        // Note: Meta webhooks expect a 200/201 HTTP status code to acknowledge receipt.
+        echo json_encode(['success' => true, 'message' => 'Lead created and scored.', 'student_id' => $new_id]);
+    } catch (\PDOException $e) {
+        if ($e->getCode() == 23000) { 
+            http_response_code(409);
+            echo json_encode(['error' => 'Lead already exists (Duplicate phone or email).']);
+            exit;
+        }
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
-    http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 }
 
 

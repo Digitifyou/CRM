@@ -1,3 +1,12 @@
+<?php
+// SECURITY CHECK: Ensure user is logged in
+require_once __DIR__ . '/api/config.php'; 
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.html');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,9 +14,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM - Students & Leads</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons (for search icon) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
@@ -22,22 +29,20 @@
 
 <body>
 
-    <!-- Navigation (Copied from settings.html) -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Training Academy CRM</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/students.html">Students</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/enrollments.html">Enrollments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/settings.html">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard.php">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/students.php">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">Student & Lead Management</h2>
@@ -46,7 +51,6 @@
             </button>
         </div>
 
-        <!-- Search Bar -->
         <div class="mb-3">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -54,7 +58,6 @@
             </div>
         </div>
 
-        <!-- Student List Table -->
         <div class="card">
             <div class="card-body">
                 <table class="table table-hover">
@@ -69,7 +72,6 @@
                         </tr>
                     </thead>
                     <tbody id="student-list-table">
-                        <!-- JS will populate this -->
                         <tr>
                             <td colspan="6" class="text-center">Loading...</td>
                         </tr>
@@ -79,7 +81,6 @@
         </div>
     </main>
 
-    <!-- Add Student Modal -->
     <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -120,8 +121,7 @@
                             <label for="course_interested_id" class="form-label">Course Interested In</label>
                             <select class="form-select" id="course_interested_id" name="course_interested_id">
                                 <option value="">-- Select Course --</option>
-                                <!-- JS will populate this from /api/v1/courses.php -->
-                            </select>
+                                </select>
                         </div>
                         <hr>
                         <div class="row">
@@ -150,9 +150,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Our Custom JS -->
     <script src="/assets/js/students.js" defer></script>
 </body>
 
