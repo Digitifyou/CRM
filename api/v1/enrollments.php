@@ -7,10 +7,14 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
+    // --- GET CURRENT USER PERMISSIONS ---
+    $current_user_id = $_SESSION['user_id'] ?? 0;
+    $current_user_role = $_SESSION['role'] ?? 'counselor';
+
     switch ($method) {
         // --- READ (Get all "open" enrollments for the Kanban) ---
         case 'GET':
-            // We join students and courses to get their names for the cards
+            // Base query
             $query = "
                 SELECT 
                     e.enrollment_id,
@@ -23,10 +27,20 @@ try {
                 JOIN students s ON e.student_id = s.student_id
                 LEFT JOIN courses c ON e.course_id = c.course_id
                 WHERE e.status = 'open' 
-                ORDER BY e.created_at DESC
             ";
             
-            $stmt = $pdo->query($query);
+            $params = [];
+
+            // --- PERMISSION CHECK ---
+            if ($current_user_role === 'counselor') {
+                $query .= " AND e.assigned_to_user_id = ?";
+                $params[] = $current_user_id;
+            }
+
+            $query .= " ORDER BY e.created_at DESC";
+            
+            $stmt = $pdo->prepare($query);
+            $stmt->execute($params);
             $enrollments = $stmt->fetchAll();
             echo json_encode($enrollments);
             break;

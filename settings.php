@@ -41,7 +41,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         <div class="row">
             <div class="col-md-3">
                 <div class="list-group" id="settings-tabs" role="tablist">
-                    <a class="list-group-item list-group-item-action active" id="courses-tab" data-bs-toggle="list" href="#courses-pane" role="tab">
+                    <a class="list-group-item list-group-item-action" id="courses-tab" data-bs-toggle="list" href="#courses-pane" role="tab">
                         <i class="bi bi-book me-2"></i> Course Management
                     </a>
                     <a class="list-group-item list-group-item-action" id="batches-tab" data-bs-toggle="list" href="#batches-pane" role="tab">
@@ -50,7 +50,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <a class="list-group-item list-group-item-action" id="pipeline-tab" data-bs-toggle="list" href="#pipeline-pane" role="tab">
                         <i class="bi bi-diagram-3 me-2"></i> Pipeline Editor
                     </a>
-                    <a class="list-group-item list-group-item-action" id="users-tab" data-bs-toggle="list" href="#users-pane" role="tab">
+                    <a class="list-group-item list-group-item-action active" id="users-tab" data-bs-toggle="list" href="#users-pane" role="tab">
                         <i class="bi bi-people me-2"></i> User Management
                     </a>
                     <a class="list-group-item list-group-item-action" id="custom-fields-tab" data-bs-toggle="list" href="#custom-fields-pane" role="tab">
@@ -67,7 +67,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             <div class="col-md-9">
                 <div class="tab-content">
 
-                    <div class="tab-pane fade show active" id="courses-pane" role="tabpanel" aria-labelledby="courses-tab">
+                    <div class="tab-pane fade" id="courses-pane" role="tabpanel" aria-labelledby="courses-tab">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Manage Courses</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
@@ -141,7 +141,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                         </ul>
                     </div>
 
-                    <div class="tab-pane fade" id="users-pane" role="tabpanel" aria-labelledby="users-tab">
+                    <div class="tab-pane fade show active" id="users-pane" role="tabpanel" aria-labelledby="users-tab">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Manage CRM Users</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">

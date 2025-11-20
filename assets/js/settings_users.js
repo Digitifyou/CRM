@@ -160,14 +160,16 @@ window.updateUserRole = updateUserRole;
 window.toggleUserStatus = toggleUserStatus;
 
 // Event listener for when the Users tab is clicked
-usersPane.addEventListener('show.bs.tab', loadUsers);
+if (usersPane) {
+    usersPane.addEventListener('show.bs.tab', loadUsers);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Only load if the Users tab is the active one on initial load
-    if (usersPane && usersPane.classList.contains('active')) {
-        loadUsers();
-    }
+    // MODIFIED: Unconditionally load users so data is available immediately
+    loadUsers();
 
     // Add user form submission
-    addUserForm.addEventListener('submit', handleAddUser);
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', handleAddUser);
+    }
 });

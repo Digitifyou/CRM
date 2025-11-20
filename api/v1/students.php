@@ -189,6 +189,10 @@ function calculateAndUpdateLeadScoreInline($pdo, $student_id, $data = []) {
 }
 
 try {
+    // --- GET CURRENT USER PERMISSIONS ---
+    $current_user_id = $_SESSION['user_id'] ?? 0;
+    $current_user_role = $_SESSION['role'] ?? 'counselor'; // Default to lowest permission
+
     switch ($method) {
         // --- READ (Get all or one) ---
         case 'GET':
@@ -196,6 +200,7 @@ try {
                 $id = $_GET['id'];
                 
                 // 1. Fetch Student's Main Data (now includes custom_data)
+                // SECURITY: In a strict system, we would also check if this specific student belongs to the counselor here.
                 $stmt = $pdo->prepare("
                     SELECT 
                         s.*, 
@@ -239,9 +244,10 @@ try {
                 echo json_encode($student);
 
             } else {
-                // Get all students for the main list
-                $query = "
-                    SELECT 
+                // --- LIST VIEW: APPLY PERMISSIONS ---
+                
+                $sql = "
+                    SELECT DISTINCT
                         s.student_id, 
                         s.full_name, 
                         s.phone, 
@@ -251,10 +257,23 @@ try {
                         c.course_name AS course_interested 
                     FROM students s
                     LEFT JOIN courses c ON s.course_interested_id = c.course_id
-                    ORDER BY s.created_at DESC
+                    LEFT JOIN enrollments e ON s.student_id = e.student_id
+                    WHERE 1=1
                 ";
                 
-                $stmt = $pdo->query($query);
+                $params = [];
+
+                // If the user is a Counselor, ONLY show students they are assigned to via enrollment
+                if ($current_user_role === 'counselor') {
+                    $sql .= " AND e.assigned_to_user_id = ?";
+                    $params[] = $current_user_id;
+                }
+                // Admins, Owners, and Trainers see all (or customize Trainer view if needed)
+
+                $sql .= " ORDER BY s.created_at DESC";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
                 $students = $stmt->fetchAll();
                 echo json_encode($students);
             }
@@ -302,8 +321,10 @@ try {
             $stage_stmt = $pdo->query("SELECT stage_id FROM pipeline_stages ORDER BY stage_order ASC LIMIT 1");
             $first_stage_id = $stage_stmt->fetchColumn();
             
-            // Find a user to assign it to (e.g., admin user ID 1 for now)
-            $admin_user_id = 1; 
+            // ** ASSIGNMENT LOGIC **
+            // Assign the new lead to the user who created it (the logged-in user)
+            // This ensures Counselors see their own leads immediately.
+            $assigned_to_user_id = $current_user_id; 
 
             // Get course fee
             $fee = 0;
@@ -322,7 +343,7 @@ try {
                  $enroll_stmt->execute([
                     $new_id,
                     $data['course_interested_id'] ? (int)$data['course_interested_id'] : null,
-                    $admin_user_id,
+                    $assigned_to_user_id,
                     $first_stage_id,
                     $fee ?: 0
                  ]);

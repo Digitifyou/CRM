@@ -1,7 +1,7 @@
 // /assets/js/settings_custom_fields.js
 
 const API_CUSTOM_FIELDS = '/api/v1/custom_fields.php';
-const API_SYSTEM_FIELDS = '/api/v1/system_fields.php'; // NEW API
+const API_SYSTEM_FIELDS = '/api/v1/system_fields.php'; 
 
 // --- Default Built-in Fields for Display (System Fields) ---
 let DEFAULT_FIELDS = [
@@ -463,25 +463,33 @@ scoreRuleInputs.forEach(input => {
 });
 
 // Hide/Show sections based on type and score checkbox
-fieldTypeSelect.addEventListener('change', toggleFieldSections);
-isScoreFieldCheckbox.addEventListener('change', toggleFieldSections);
+if (fieldTypeSelect) fieldTypeSelect.addEventListener('change', toggleFieldSections);
+if (isScoreFieldCheckbox) isScoreFieldCheckbox.addEventListener('change', toggleFieldSections);
 
 
 // Event listener for when the Custom Fields tab is clicked
-customFieldsPane.addEventListener('show.bs.tab', loadCustomFields);
+if (customFieldsPane) {
+    customFieldsPane.addEventListener('show.bs.tab', loadCustomFields);
+}
 
 // Event listener for when the modal is about to be shown (used only for CREATE button)
-document.getElementById('addCustomFieldModal').addEventListener('show.bs.modal', function(event) {
-    if (event.relatedTarget && event.relatedTarget.getAttribute('data-bs-target') === '#addCustomFieldModal') {
-         if (!fieldIdInput.value || fieldIdInput.value < 0) {
-            resetAddModal();
-         }
-    }
-});
+const addModalEl = document.getElementById('addCustomFieldModal');
+if (addModalEl) {
+    addModalEl.addEventListener('show.bs.modal', function(event) {
+        if (event.relatedTarget && event.relatedTarget.getAttribute('data-bs-target') === '#addCustomFieldModal') {
+             if (!fieldIdInput.value || fieldIdInput.value < 0) {
+                resetAddModal();
+             }
+        }
+    });
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // MODIFIED: Unconditionally load fields so data is available immediately
     loadCustomFields();
     
-    addCustomFieldForm.addEventListener('submit', handleAddCustomField);
+    if (addCustomFieldForm) {
+        addCustomFieldForm.addEventListener('submit', handleAddCustomField);
+    }
 });

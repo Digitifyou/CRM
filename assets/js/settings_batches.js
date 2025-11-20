@@ -206,10 +206,8 @@ addBatchModalElement.addEventListener('show.bs.modal', loadCoursesDropdown);
 
 document.addEventListener('DOMContentLoaded', () => {
     // If the batches tab is the active one on initial load
-    if (batchesPane && batchesPane.classList.contains('active')) {
-        loadBatches();
+    loadBatches();
         loadCoursesDropdown();
-    }
     
     addBatchForm.addEventListener('submit', handleAddBatch);
 });
