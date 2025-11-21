@@ -2,14 +2,14 @@
 
 const API_STAGES = '/api/v1/pipeline.php';
 
-// --- DOM Elements ---
-const pipelineStagesList = document.getElementById('pipeline-stages-list');
-const addStageForm = document.getElementById('add-stage-form');
-const addStageModal = new bootstrap.Modal(document.getElementById('addStageModal'));
-const pipelinePane = document.getElementById('pipeline-pane');
+// Variables now placeholders
+let pipelineStagesList;
+let addStageForm;
+let addStageModal;
+let pipelinePane;
 
 let stages = [];
-let draggedStage = null; // Used for reordering
+let draggedStage = null; 
 
 /**
  * Renders the list of pipeline stages
@@ -18,7 +18,6 @@ function renderPipelineStages() {
     pipelineStagesList.innerHTML = ''; // Clear list
 
     if (stages.length === 0) {
-        // Updated message for clarity
         pipelineStagesList.innerHTML = '<li class="list-group-item text-center text-muted">No pipeline stages are defined. Use the "Add New Stage" button above.</li>';
         return;
     }
@@ -63,7 +62,6 @@ async function loadPipelineStages() {
 
     } catch (error) {
         console.error('Error loading pipeline stages:', error);
-        // Updated error message for debugging visibility
         pipelineStagesList.innerHTML = `<li class="list-group-item text-center text-danger">Failed to load stages. Check console and API: ${error.message}</li>`;
     }
 }
@@ -99,7 +97,6 @@ async function handleAddStage(event) {
     }
 }
 
-loadPipelineStages()
 
 /**
  * Deletes a stage (DELETE request)
@@ -121,11 +118,9 @@ async function deleteStage(stageId) {
             throw new Error(data.error || 'Failed to delete stage');
         }
 
-        // Remove item from UI instantly
         const item = document.querySelector(`li[data-id="${stageId}"]`);
         if (item) item.remove();
 
-        // Reload to re-check all stages
         await loadPipelineStages();
 
     } catch (error) {
@@ -183,14 +178,11 @@ function setupDragAndDrop() {
             const bounding = item.getBoundingClientRect();
             const offset = bounding.y + (bounding.height / 2);
 
-            // Dragging up or down?
             if (e.clientY < offset) {
-                // Move current item above the item being hovered over
                 if (draggedStage !== item) {
                     pipelineStagesList.insertBefore(draggedStage, item);
                 }
             } else {
-                // Move current item below the item being hovered over
                 if (draggedStage !== item) {
                     pipelineStagesList.insertBefore(draggedStage, item.nextSibling);
                 }
@@ -202,19 +194,16 @@ function setupDragAndDrop() {
     pipelineStagesList.addEventListener('drop', async(e) => {
         e.preventDefault();
 
-        // 1. Recalculate and save the new order for ALL stages
         const updatedStages = Array.from(pipelineStagesList.children).map((item, index) => {
             const stageId = item.dataset.id;
             const newOrder = index + 1;
 
-            // Only update the server if the stage being dropped is the one we dragged
             if (stageId === draggedStage.dataset.id) {
                 updateStageOrder(stageId, newOrder);
             }
             return { id: stageId, order: newOrder };
         });
 
-        // Reload all stages to show the new persistent order, which will also update the local 'stages' array
         await loadPipelineStages();
     });
 }
@@ -222,19 +211,28 @@ function setupDragAndDrop() {
 
 // --- Global Functions and Event Listeners ---
 
-// Attach to window so it can be called from onclick in renderPipelineStages
 window.deleteStage = deleteStage;
 
-// Event listener for when the Pipeline tab is clicked
-pipelinePane.addEventListener('show.bs.tab', loadPipelineStages);
-
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Only load if the pipeline tab is the active one on initial load
-    if (pipelinePane.classList.contains('active')) {
-        loadPipelineStages();
+    // 1. Element Lookups & Modal Instantiation
+    pipelineStagesList = document.getElementById('pipeline-stages-list');
+    addStageForm = document.getElementById('add-stage-form');
+    pipelinePane = document.getElementById('pipeline-pane');
+    
+    if (typeof bootstrap !== 'undefined') {
+        const addStageModalElement = document.getElementById('addStageModal');
+        if (addStageModalElement) {
+             addStageModal = new bootstrap.Modal(addStageModalElement);
+        }
     }
 
-    // Add stage form submission
-    addStageForm.addEventListener('submit', handleAddStage);
+    loadPipelineStages();
+    
+    // 3. Event Listeners
+    if (pipelinePane) {
+        pipelinePane.addEventListener('show.bs.tab', loadPipelineStages);
+    }
+    if (addStageForm) {
+        addStageForm.addEventListener('submit', handleAddStage);
+    }
 });

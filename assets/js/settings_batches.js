@@ -3,14 +3,12 @@
 const API_BATCHES = '/api/v1/batches.php';
 const API_COURSES = '/api/v1/courses.php';
 
-// --- DOM Elements ---
-const batchTableBody = document.getElementById('batch-list-table');
-const addBatchForm = document.getElementById('add-batch-form');
-// Use document.getElementById directly for the modal element
-const addBatchModalElement = document.getElementById('addBatchModal'); 
-const addBatchModal = new bootstrap.Modal(addBatchModalElement);
-const batchCourseSelect = document.getElementById('batch-course-id');
-const batchesPane = document.getElementById('batches-pane');
+// Variables now placeholders
+let batchTableBody;
+let addBatchForm;
+let addBatchModal;
+let batchCourseSelect;
+let batchesPane;
 
 // --- Caching for Courses (Optimized for repeated modal opening) ---
 let courseCache = [];
@@ -194,20 +192,38 @@ async function deleteBatch(batchId) {
 
 window.deleteBatch = deleteBatch;
 
-// 1. Load batches when the tab is switched to
-batchesPane.addEventListener('show.bs.tab', () => {
-    loadBatches();
-    // Pre-load the courses list when entering the tab, for speed
-    loadCoursesDropdown(); 
-});
-
-// 2. Guarantee the dropdown is populated right before the modal shows
-addBatchModalElement.addEventListener('show.bs.modal', loadCoursesDropdown);
-
 document.addEventListener('DOMContentLoaded', () => {
-    // If the batches tab is the active one on initial load
-    loadBatches();
-        loadCoursesDropdown();
+    // 1. Element Lookups & Modal Instantiation
+    batchTableBody = document.getElementById('batch-list-table');
+    addBatchForm = document.getElementById('add-batch-form');
+    batchCourseSelect = document.getElementById('batch-course-id');
+    batchesPane = document.getElementById('batches-pane');
+
+    if (typeof bootstrap !== 'undefined') {
+        const addBatchModalElement = document.getElementById('addBatchModal');
+        if (addBatchModalElement) {
+             addBatchModal = new bootstrap.Modal(addBatchModalElement);
+        }
+    }
     
-    addBatchForm.addEventListener('submit', handleAddBatch);
+    // 2. Initial Load Logic
+    loadBatches();
+    loadCoursesDropdown();
+
+    // 3. Event Listeners
+    if (batchesPane) {
+        batchesPane.addEventListener('show.bs.tab', () => {
+            loadBatches();
+            loadCoursesDropdown(); 
+        });
+    }
+
+    const addBatchModalElement = document.getElementById('addBatchModal');
+    if (addBatchModalElement) {
+        addBatchModalElement.addEventListener('show.bs.modal', loadCoursesDropdown);
+    }
+    
+    if (addBatchForm) {
+        addBatchForm.addEventListener('submit', handleAddBatch);
+    }
 });

@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f0f2f5; /* Updated for UI consistency */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,11 +27,11 @@
 
     <div class="login-container">
         <h3 class="text-center mb-4">Training Academy CRM Login</h3>
-        <div class="card shadow-lg">
-            <div class="card-header bg-dark text-white text-center">
+        <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-primary text-white text-center rounded-top-3">
                 <i class="bi bi-person-circle me-2"></i> User Sign In
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <div id="alert-message" class="alert d-none" role="alert"></div>
 
                 <form id="login-form">
@@ -48,7 +48,7 @@
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
                             <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password" value="admin123">
                         </div>
-                        <small class="form-text text-muted">Hint: Use the default admin user with password "admin123".</small>
+                        <!-- <small class="form-text text-muted">Hint: Use the default admin user with password "admin123".</small> -->
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary" id="login-button">
@@ -56,6 +56,10 @@
                         </button>
                     </div>
                 </form>
+
+                <p class="text-center mt-3 mb-0 small">
+                    <a href="signup.html" class="text-primary fw-bold">Need a new CRM setup? Register your Academy.</a>
+                </p>
             </div>
         </div>
     </div>

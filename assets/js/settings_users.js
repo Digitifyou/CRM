@@ -1,12 +1,10 @@
-// /assets/js/settings_users.js
-
 const API_USERS = '/api/v1/users.php';
 
-// --- DOM Elements ---
-const userTableBody = document.getElementById('user-list-table');
-const addUserForm = document.getElementById('add-user-form');
-const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
-const usersPane = document.getElementById('users-pane');
+// Variables now placeholders, actual elements retrieved inside DOMContentLoaded
+let userTableBody;
+let addUserForm;
+let addUserModal;
+let usersPane;
 
 /**
  * Renders the list of users into the table
@@ -159,16 +157,26 @@ async function toggleUserStatus(userId, currentStatus) {
 window.updateUserRole = updateUserRole;
 window.toggleUserStatus = toggleUserStatus;
 
-// Event listener for when the Users tab is clicked
-if (usersPane) {
-    usersPane.addEventListener('show.bs.tab', loadUsers);
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    // MODIFIED: Unconditionally load users so data is available immediately
+    // 1. Element Lookups & Modal Instantiation (Moved into DOMContentLoaded)
+    userTableBody = document.getElementById('user-list-table');
+    addUserForm = document.getElementById('add-user-form');
+    usersPane = document.getElementById('users-pane');
+    
+    if (typeof bootstrap !== 'undefined') {
+        const addUserModalElement = document.getElementById('addUserModal');
+        if (addUserModalElement) {
+             addUserModal = new bootstrap.Modal(addUserModalElement);
+        }
+    }
+
+    // 2. Initial Load Logic
     loadUsers();
 
-    // Add user form submission
+    // 3. Event Listeners
+    if (usersPane) {
+        usersPane.addEventListener('show.bs.tab', loadUsers);
+    }
     if (addUserForm) {
         addUserForm.addEventListener('submit', handleAddUser);
     }

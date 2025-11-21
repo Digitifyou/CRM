@@ -6,6 +6,16 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+
+$academy_id = ACADEMY_ID;
+// --- MULTI-TENANCY CHECK ---
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+// ---------------------------
+
 try {
     // --- GET CURRENT USER PERMISSIONS ---
     $current_user_id = $_SESSION['user_id'] ?? 0;
@@ -14,7 +24,7 @@ try {
     switch ($method) {
         // --- READ (Get all "open" enrollments for the Kanban) ---
         case 'GET':
-            // Base query
+            // Base query SCOPED by joining student table
             $query = "
                 SELECT 
                     e.enrollment_id,
@@ -26,10 +36,10 @@ try {
                 FROM enrollments e
                 JOIN students s ON e.student_id = s.student_id
                 LEFT JOIN courses c ON e.course_id = c.course_id
-                WHERE e.status = 'open' 
+                WHERE e.status = 'open' AND s.academy_id = ? 
             ";
             
-            $params = [];
+            $params = [$academy_id]; 
 
             // --- PERMISSION CHECK ---
             if ($current_user_role === 'counselor') {
@@ -50,7 +60,7 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
 
             if (empty($data['enrollment_id'])) {
-                 http_response_code(400); // Bad Request
+                 http_response_code(400); 
                  echo json_encode(['error' => 'Enrollment ID is required']);
                  exit;
             }
@@ -58,6 +68,23 @@ try {
             $enrollment_id = (int)$data['enrollment_id'];
             $params = [];
             $updates = [];
+
+            // --- SECURITY CHECK: VERIFY ENROLLMENT BELONGS TO ACADEMY (SCOPED) ---
+            $check_stmt = $pdo->prepare("
+                SELECT e.student_id, e.course_id 
+                FROM enrollments e 
+                JOIN students s ON e.student_id = s.student_id
+                WHERE e.enrollment_id = ? AND s.academy_id = ?
+            ");
+            $check_stmt->execute([$enrollment_id, $academy_id]);
+            $enroll_security = $check_stmt->fetch();
+
+            if (!$enroll_security) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Enrollment not found or does not belong to this academy.']);
+                exit;
+            }
+            // --- END SECURITY CHECK ---
 
             if (isset($data['new_stage_id']) && !isset($data['status'])) {
                 // Action: Pipeline Stage Change (Drag-and-Drop)
@@ -76,15 +103,15 @@ try {
                 $enroll_details = $fee_stmt->fetch();
 
                 if ($enroll_details) {
-                    // Update fees paid (assuming full payment on enrollment for MVP)
+                    // Update fees paid
                     $updates[] = 'total_fee_paid = ?';
                     $params[] = $enroll_details['total_fee_agreed'];
                     
-                    // Update student status to 'active_student'
-                    $student_stmt = $pdo->prepare("UPDATE students SET status = 'active_student' WHERE student_id = ?");
-                    $student_stmt->execute([(int)$enroll_details['student_id']]);
+                    // Update student status (SCOPED)
+                    $student_stmt = $pdo->prepare("UPDATE students SET status = 'active_student' WHERE student_id = ? AND academy_id = ?");
+                    $student_stmt->execute([(int)$enroll_details['student_id'], $academy_id]); 
                     
-                    // Find and update the corresponding batch seat count
+                    // Find and update the corresponding batch seat count (SCOPED)
                     if ($enroll_details['course_id']) {
                         $batch_stmt = $pdo->prepare("
                             SELECT batch_id 
@@ -92,22 +119,23 @@ try {
                             WHERE course_id = ? 
                             AND start_date >= CURDATE() 
                             AND filled_seats < total_seats
+                            AND academy_id = ? 
                             ORDER BY start_date ASC 
                             LIMIT 1
                         ");
-                        $batch_stmt->execute([(int)$enroll_details['course_id']]);
+                        $batch_stmt->execute([(int)$enroll_details['course_id'], $academy_id]); 
                         $batch_id = $batch_stmt->fetchColumn();
                         
                         if ($batch_id) {
-                            $pdo->prepare("UPDATE batches SET filled_seats = filled_seats + 1 WHERE batch_id = ?")
-                                ->execute([$batch_id]);
+                            $pdo->prepare("UPDATE batches SET filled_seats = filled_seats + 1 WHERE batch_id = ? AND academy_id = ?")
+                                ->execute([$batch_id, $academy_id]); 
                             $message = 'Enrollment WON and Batch seat updated.';
                         } else {
                             $message = 'Enrollment WON, but no open batch was found to update.';
                         }
                     }
                 }
-                $message = $message ?? 'Enrollment marked as ENROLLED (Won)'; // Fallback message
+                $message = $message ?? 'Enrollment marked as ENROLLED (Won)'; 
 
             } else if (isset($data['status']) && $data['status'] === 'lost') {
                 // Action: Mark as LOST
@@ -120,7 +148,7 @@ try {
                 }
                 $message = 'Enrollment marked as LOST';
             } else if (isset($data['status']) && $data['status'] === 'open' && isset($data['new_stage_id'])) {
-                // Action: REOPEN DEAL (Setting status to open AND moving stage)
+                // Action: REOPEN DEAL
                 $updates[] = 'status = ?';
                 $params[] = 'open';
                 $updates[] = 'pipeline_stage_id = ?';
@@ -133,20 +161,19 @@ try {
                  exit;
             }
 
-            $sql = "UPDATE enrollments SET " . implode(', ', $updates) . " WHERE enrollment_id = ?";
+            // SCOPED: Final Update query
+            $sql = "UPDATE enrollments SET " . implode(', ', $updates) . " WHERE enrollment_id = ? AND academy_id = ?";
             $params[] = $enrollment_id;
+            $params[] = $academy_id;
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
             echo json_encode(['message' => $message]);
             break;
-        
-        // POST (Create) is handled by students.php
-        // DELETE (Lost/Won) would be a PUT/DELETE here
 
         default:
-            http_response_code(405); // Method Not Allowed
+            http_response_code(405); 
             echo json_encode(['error' => 'Method Not Allowed']);
             break;
     }

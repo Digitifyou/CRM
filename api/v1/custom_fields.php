@@ -6,11 +6,22 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- MULTI-TENANCY CHECK ---
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+$academy_id = ACADEMY_ID;
+// ---------------------------
+
 try {
     switch ($method) {
         // --- READ (Get all custom fields) ---
         case 'GET':
-            $stmt = $pdo->query("SELECT * FROM custom_fields ORDER BY field_id ASC");
+            // SCOPED: Filter by academy_id
+            $stmt = $pdo->prepare("SELECT * FROM custom_fields WHERE academy_id = ? ORDER BY field_id ASC");
+            $stmt->execute([$academy_id]);
             $fields = $stmt->fetchAll();
             echo json_encode($fields);
             break;
@@ -25,21 +36,19 @@ try {
                  exit;
             }
             
-            // Normalize field key (convert spaces/special chars to underscores)
             $field_key = strtolower(preg_replace('/[^A-Za-z0-9\_]/', '_', $data['field_key']));
             
-            // Convert options array/string to JSON string for storage
             $options_json = null;
             if ($data['field_type'] === 'select' && !empty($data['options'])) {
                 $options_array = array_map('trim', explode(',', $data['options']));
                 $options_json = json_encode($options_array);
             }
 
-            // Scoring Rules are expected as a JSON string from the client
             $scoring_rules_json = $data['scoring_rules'] ?? null;
             
-            $sql = "INSERT INTO custom_fields (field_name, field_key, field_type, options, is_required, is_score_field, scoring_rules) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+            // SCOPED: Insert with academy_id
+            $sql = "INSERT INTO custom_fields (field_name, field_key, field_type, options, is_required, is_score_field, scoring_rules, academy_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $data['field_name'],
@@ -48,7 +57,8 @@ try {
                 $options_json,
                 (bool)($data['is_required'] ?? false),
                 (bool)($data['is_score_field'] ?? false),
-                $scoring_rules_json
+                $scoring_rules_json,
+                $academy_id
             ]);
             
             http_response_code(201); // Created
@@ -65,7 +75,7 @@ try {
                  exit;
             }
 
-            // Options handling (same as POST)
+            // Options handling (logic remains the same)
             $options_json = null;
             if ($data['field_type'] === 'select' && !empty($data['options'])) {
                 $options_array = array_map('trim', explode(',', $data['options']));
@@ -73,18 +83,16 @@ try {
             } else if ($data['field_type'] !== 'select') {
                 $options_json = null;
             } else if (isset($data['options_null'])) {
-                 // Allows clearing options on PUT request (if sent)
                  $options_json = null;
             } else {
-                 // Fetch existing options if not explicitly cleared or provided
                  $stmt = $pdo->prepare("SELECT options FROM custom_fields WHERE field_id = ?");
                  $stmt->execute([$data['field_id']]);
                  $options_json = $stmt->fetchColumn();
             }
 
-            // Scoring Rules Update (Expected as JSON string from client)
             $scoring_rules_json = $data['scoring_rules'] ?? null;
 
+            // SCOPED: Update check
             $sql = "UPDATE custom_fields SET 
                         field_name = ?, 
                         field_type = ?, 
@@ -92,7 +100,7 @@ try {
                         is_required = ?, 
                         is_score_field = ?,
                         scoring_rules = ?
-                    WHERE field_id = ?";
+                    WHERE field_id = ? AND academy_id = ?";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
@@ -102,7 +110,8 @@ try {
                 (bool)($data['is_required'] ?? false),
                 (bool)($data['is_score_field'] ?? false),
                 $scoring_rules_json,
-                (int)$data['field_id']
+                (int)$data['field_id'],
+                $academy_id
             ]);
             
             echo json_encode(['message' => 'Custom field updated']);
@@ -118,8 +127,9 @@ try {
             
             $id = $_GET['id'];
             
-            $stmt = $pdo->prepare("DELETE FROM custom_fields WHERE field_id = ?");
-            $stmt->execute([$id]);
+            // SCOPED: Delete check
+            $stmt = $pdo->prepare("DELETE FROM custom_fields WHERE field_id = ? AND academy_id = ?");
+            $stmt->execute([$id, $academy_id]);
             
             echo json_encode(['message' => 'Custom field deleted']);
             break;

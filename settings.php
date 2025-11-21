@@ -1,9 +1,20 @@
 <?php
+// /settings.php
 // SECURITY CHECK: Ensure user is logged in
 require_once __DIR__ . '/api/config.php'; 
 
+// 1. Authentication Check
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: login.html');
+    exit;
+}
+
+// 2. Role Permission Check
+$allowed_roles = ['admin', 'owner'];
+$current_role = $_SESSION['role'] ?? '';
+
+if (!in_array($current_role, $allowed_roles)) {
+    header('Location: dashboard.php');
     exit;
 }
 ?>
@@ -62,86 +73,43 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <a class="list-group-item list-group-item-action" id="bulk-import-tab" data-bs-toggle="list" href="#bulk-import-pane" role="tab">
                         <i class="bi bi-cloud-upload me-2"></i> Bulk Import
                     </a>
-                    </div>
+                </div>
             </div>
             <div class="col-md-9">
                 <div class="tab-content">
 
-                    <div class="tab-pane fade" id="courses-pane" role="tabpanel" aria-labelledby="courses-tab">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="tab-pane fade" id="courses-pane" role="tabpanel">
+                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Manage Courses</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
                                 <i class="bi bi-plus-lg"></i> Add New Course
                             </button>
                         </div>
-
-                        <div class="card">
-                            <div class="card-body">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Course Name</th>
-                                            <th>Standard Fee (₹)</th>
-                                            <th>Duration</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="course-list-table">
-                                        <tr>
-                                            <td colspan="4" class="text-center">Loading courses...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <div class="card"><div class="card-body"><table class="table table-hover"><thead><tr><th>Course Name</th><th>Standard Fee (₹)</th><th>Duration</th><th class="text-end">Actions</th></tr></thead><tbody id="course-list-table"><tr><td colspan="4" class="text-center">Loading...</td></tr></tbody></table></div></div>
                     </div>
 
-                    <div class="tab-pane fade" id="batches-pane" role="tabpanel" aria-labelledby="batches-tab">
+                    <div class="tab-pane fade" id="batches-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Manage Batches</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBatchModal">
                                 <i class="bi bi-plus-lg"></i> Add New Batch
                             </button>
                         </div>
-
-                        <div class="card">
-                            <div class="card-body">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Batch Name</th>
-                                            <th>Course</th>
-                                            <th>Start Date</th>
-                                            <th>Seats</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="batch-list-table">
-                                        <tr>
-                                            <td colspan="5" class="text-center">Loading batches...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <div class="card"><div class="card-body"><table class="table table-hover"><thead><tr><th>Batch Name</th><th>Course</th><th>Start Date</th><th>Seats</th><th class="text-end">Actions</th></tr></thead><tbody id="batch-list-table"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody></table></div></div>
                     </div>
 
-                    <div class="tab-pane fade" id="pipeline-pane" role="tabpanel" aria-labelledby="pipeline-tab">
+                    <div class="tab-pane fade" id="pipeline-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Edit Admissions Funnel Stages</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStageModal">
                                 <i class="bi bi-plus-lg"></i> Add New Stage
                             </button>
                         </div>
-                        <div class="alert alert-info">
-                            Drag and drop the stages below to re-order your Kanban board columns.
-                        </div>
-
-                        <ul class="list-group list-group-flush" id="pipeline-stages-list">
-                        </ul>
+                        <div class="alert alert-info">Drag and drop stages to re-order.</div>
+                        <ul class="list-group list-group-flush" id="pipeline-stages-list"></ul>
                     </div>
 
-                    <div class="tab-pane fade show active" id="users-pane" role="tabpanel" aria-labelledby="users-tab">
+                    <div class="tab-pane fade show active" id="users-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h3 class="mb-0">Manage CRM Users</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
@@ -152,308 +120,155 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <div class="card-body">
                                 <table class="table table-hover">
                                     <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Username</th>
-                                            <th>Role</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
+                                        <tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th class="text-end">Actions</th></tr>
                                     </thead>
-                                    <tbody id="user-list-table">
-                                        <tr>
-                                            <td colspan="5" class="text-center">Loading users...</td>
-                                        </tr>
-                                    </tbody>
+                                    <tbody id="user-list-table"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="custom-fields-pane" role="tabpanel" aria-labelledby="custom-fields-tab">
+                    <div class="tab-pane fade" id="custom-fields-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h3 class="mb-0">Custom Fields for Leads</h3>
+                            <h3 class="mb-0">Custom Fields</h3>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomFieldModal">
                                 <i class="bi bi-plus-lg"></i> Add New Field
                             </button>
                         </div>
-                        <div class="alert alert-warning">
-                            Adding fields here requires database changes and an update to the Student Profile UI.
-                        </div>
                         <div class="card">
                             <div class="card-body">
                                 <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Field Name</th>
-                                            <th>Key (DB Column)</th>
-                                            <th>Type</th>
-                                            <th>Scoring</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="custom-fields-list-table">
-                                        <tr>
-                                            <td colspan="5" class="text-center">Loading fields...</td>
-                                        </tr>
-                                    </tbody>
+                                    <thead><tr><th>Field Name</th><th>Key</th><th>Type</th><th>Scoring</th><th class="text-end">Actions</th></tr></thead>
+                                    <tbody id="custom-fields-list-table"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <div class="tab-pane fade" id="integrations-pane" role="tabpanel" aria-labelledby="integrations-tab">
+                    <div class="tab-pane fade" id="integrations-pane" role="tabpanel">
                         <h3 class="mb-4">Lead Capture Integrations</h3>
-                        <p class="text-muted">Connect your external platforms to automatically push leads into the CRM.</p>
+
+                        <div class="card mb-3 border-success">
+                            <div class="card-header bg-success text-white">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i> Google Sheets Integration
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i> Active</span>
+                                    <span class="text-muted small">Service Account Key is installed.</span>
+                                </div>
+                                
+                                <h5>How to Import from Private Sheets</h5>
+                                <ol class="text-muted small" style="line-height: 1.8;">
+                                    <li class="mb-2">
+                                        <strong>Share the Sheet:</strong> Open your Google Sheet, click "Share", and add this email as a <strong>Viewer</strong>:<br>
+                                        <div class="input-group input-group-sm mt-1" style="max-width: 550px;">
+                                            <span class="input-group-text bg-light">Service Email</span>
+                                            <input type="text" class="form-control bg-white text-dark" value="flowsystmz-crm@digitifyu-401012.iam.gserviceaccount.com" readonly id="service-email-input">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('service-email-input').value)">
+                                                <i class="bi bi-clipboard"></i> Copy
+                                            </button>
+                                        </div>
+                                    </li>
+                                    <li class="mb-1"><strong>Copy URL:</strong> Copy the full web address (URL) of your Google Sheet from the browser bar.</li>
+                                    <li><strong>Import:</strong> Go to the <strong>Bulk Import</strong> tab, select "Google Sheet URL", paste the link, and click <strong>Load Columns</strong>.</li>
+                                </ol>
+                            </div>
+                        </div>
 
                         <div class="card mb-3" data-platform="meta">
                             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                                <i class="bi bi-meta me-2"></i> Meta Lead Ads (Facebook/Instagram)
+                                <span><i class="bi bi-meta me-2"></i> Meta Lead Ads</span>
                                 <span id="meta-connection-status" class="badge bg-danger">Disconnected</span>
                             </div>
-                            
                             <div class="card-body">
-                                <h5>Connection</h5>
-                                <p>Connect your account to fetch ad data, lead forms, and metrics. You need to grant `leads_retrieval`, `ads_read`, and `pages_manage_ads` permissions.</p>
-                                <button class="btn btn-primary" id="meta-login-button">
-                                    <i class="bi bi-facebook me-2"></i> Connect with Facebook
-                                </button>
-                                <p id="auth-status-message" class="text-muted small mt-2 d-none">Initializing Meta SDK...</p>
-
-                                <hr class="mt-4">
-                                <h5>Lead Form Field Mapping</h5>
-                                <p class="text-muted small">Map fields from your Meta Lead Forms to fields in your CRM.</p>
+                                <button class="btn btn-primary btn-sm mb-3" id="meta-login-button">Connect with Facebook</button>
+                                <p id="auth-status-message" class="text-muted small d-none">Initializing...</p>
                                 
+                                <h6>Field Mapping</h6>
                                 <form id="meta-mapping-form">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Meta Field Name (Source)</th>
-                                                    <th>CRM Field Key (Target)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="meta-mapping-table">
-                                                <tr><td colspan="2" class="text-center text-muted">Load Meta Forms to map fields.</td></tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <button type="submit" class="btn btn-success btn-sm mt-2" id="save-mapping-button" disabled>
-                                        Save Field Mapping
-                                    </button>
+                                    <table class="table table-bordered table-sm">
+                                        <thead><tr><th>Meta Field</th><th>CRM Field</th></tr></thead>
+                                        <tbody id="meta-mapping-table"><tr><td colspan="2" class="text-center text-muted">Load Meta Forms to map fields.</td></tr></tbody>
+                                    </table>
+                                    <button type="submit" class="btn btn-success btn-sm" id="save-mapping-button" disabled>Save Mapping</button>
                                 </form>
                             </div>
                         </div>
-
-                        <div class="card mb-3" data-platform="website_form">
-                            <div class="card-header bg-secondary text-white">
-                                <i class="bi bi-browser-chrome me-2"></i> Website Contact Form
+                        
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white"><i class="bi bi-browser-chrome me-2"></i> Website Webhook</div>
+                            <div class="card-body">
+                                <input type="text" class="form-control mb-2" readonly value="[Your URL]/api/v1/webhook.php?key=SECURE-KEY">
+                                <small class="text-muted">POST data here to create leads.</small>
                             </div>
-                            <form class="p-3 integration-form" data-platform-id="website_form">
-                                <input type="hidden" name="platform" value="website_form">
-                                <div class="mb-3">
-                                    <label class="form-label">Webhook URL</label>
-                                    <input type="text" class="form-control" readonly value="[Your CRM Base URL]/api/v1/webhook.php?key=[AUTO GENERATED KEY]">
-                                    <small class="form-text text-muted">Use this URL in your website's form submission logic.</small>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="website_is_active" name="is_active" checked>
-                                        <label class="form-check-label" for="website_is_active">Integration Active</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">Save Website Settings</button>
-                                </div>
-                            </form>
                         </div>
                     </div>
                     
-                    <div class="tab-pane fade" id="bulk-import-pane" role="tabpanel" aria-labelledby="bulk-import-tab">
-                        <h3 class="mb-4">Bulk Import Leads from CSV/TSV</h3>
-                        <p class="text-muted">Import leads by providing a file link or uploading a local file.</p>
-                        
-                        <a href="#" id="download-sample-csv" class="btn btn-sm btn-outline-info mb-3">
-                            <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Sample CSV File
-                        </a>
+                    <div class="tab-pane fade" id="bulk-import-pane" role="tabpanel">
+                        <h3 class="mb-4">Bulk Import Leads</h3>
 
+                        <div class="card mb-4 border-success bg-light">
+                            <div class="card-body py-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i> Active</span>
+                                    <h6 class="mb-0 text-success">Google Sheets Integration Configured</h6>
+                                </div>
+                                <p class="small text-muted mb-2">Follow these steps to import from a private sheet:</p>
+                                <ol class="small text-muted ps-3 mb-0">
+                                    <li><strong>Share the Sheet:</strong> Open your Google Sheet, click "Share", and add this email as a <strong>Viewer</strong>:
+                                        <div class="input-group input-group-sm my-1" style="max-width: 500px;">
+                                            <input type="text" class="form-control bg-white" value="flowsystmz-crm@digitifyu-401012.iam.gserviceaccount.com" readonly id="service-email-bulk">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('service-email-bulk').value)">Copy</button>
+                                        </div>
+                                    </li>
+                                    <li><strong>Copy URL:</strong> Paste the full browser URL into the field below.</li>
+                                </ol>
+                            </div>
+                        </div>
                         <div class="card mb-3">
                             <div class="card-body">
-                                <h5 class="card-title">1. Source Data</h5>
+                                <h5 class="card-title">Source</h5>
                                 <form id="bulk-import-form">
-                                    
-                                    <div id="url-input-group" class="mb-3">
-                                        <label for="google_sheet_link" class="form-label">URL Link (Google Sheet Publish Link)</label>
-                                        <input type="url" class="form-control" id="google_sheet_link" name="google_sheet_link" placeholder="e.g., https://docs.google.com/spreadsheets/d/.../export?format=csv">
+                                    <div class="mb-3">
+                                        <label class="form-label">Google Sheet URL or Upload CSV</label>
+                                        <div class="input-group">
+                                            <input type="url" class="form-control" id="google_sheet_link" name="google_sheet_link" placeholder="https://docs.google.com/spreadsheets/d/...">
+                                            <span class="input-group-text">OR</span>
+                                            <input type="file" class="form-control" id="csv_file_upload" name="csv_file_upload" accept=".csv">
+                                        </div>
                                     </div>
-                                    <div id="file-input-group" class="mb-3">
-                                        <label for="csv_file_upload" class="form-label">Local CSV/TSV File</label>
-                                        <input type="file" class="form-control" id="csv_file_upload" name="csv_file_upload" accept=".csv, .tsv, .txt">
-                                    </div>
                                     
-                                    <h5 class="card-title mt-4">2. Field Mapping</h5>
-                                    <p class="text-muted small">Map the columns from your source (Source) to the fields in the CRM (Target). **Full Name** and **Phone Number** are required.</p>
-
-                                    <div class="table-responsive">
+                                    <div class="table-responsive mt-3">
                                         <table class="table table-bordered table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Source Column Header</th>
-                                                    <th>CRM Field Key (Target)</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="import-mapping-table">
-                                                <tr><td colspan="2" class="text-center text-muted">Enter data above and click Load to see columns.</td></tr>
-                                            </tbody>
+                                            <thead><tr><th>Source Column</th><th>Target CRM Field</th></tr></thead>
+                                            <tbody id="import-mapping-table"><tr><td colspan="2" class="text-center text-muted">Enter source and click Load.</td></tr></tbody>
                                         </table>
                                     </div>
                                     
                                     <div id="import-status-alert" class="alert d-none mt-3" role="alert"></div>
 
-                                    <div class="text-end">
-                                        <button type="button" class="btn btn-secondary me-2" id="load-columns-button" onclick="handleLoadColumns()">Load Columns</button>
-                                        <button type="submit" class="btn btn-primary" id="start-import-button" disabled>Start Bulk Import</button>
+                                    <div class="text-end mt-3">
+                                        <button type="button" class="btn btn-secondary me-2" id="load-columns-button">Load Columns</button>
+                                        <button type="submit" class="btn btn-primary" id="start-import-button" disabled>Start Import</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
-                    </div>
+
+                </div>
             </div>
         </div>
-
     </main>
+    
+    <div class="modal fade" id="addCourseModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Add Course</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-course-form"><div class="modal-body"><input class="form-control mb-3" name="course_name" placeholder="Name" required><input type="number" class="form-control mb-3" name="standard_fee" placeholder="Fee" required><input class="form-control" name="duration" placeholder="Duration"></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Save</button></div></form></div></div></div>
 
-    <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCourseModalLabel">Add New Course</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="add-course-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="course_name" class="form-label">Course Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="course_name" name="course_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="standard_fee" class="form-label">Standard Fee (₹) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" id="standard_fee" name="standard_fee" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="duration" class="form-label">Duration (e.g., "6 Months")</label>
-                            <input type="text" class="form-control" id="duration" name="duration">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Course</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="addBatchModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Add Batch</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-batch-form"><div class="modal-body"><input class="form-control mb-3" name="batch_name" placeholder="Batch Name" required><select class="form-select mb-3" id="batch-course-id" name="course_id" required></select><div class="row"><div class="col"><input type="date" class="form-control" name="start_date" required></div><div class="col"><input type="number" class="form-control" name="total_seats" placeholder="Seats" required></div></div></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Save</button></div></form></div></div></div>
 
-    <div class="modal fade" id="addBatchModal" tabindex="-1" aria-labelledby="addBatchModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addBatchModalLabel">Create New Batch</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="add-batch-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="batch_name" class="form-label">Batch Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="batch_name" name="batch_name" required placeholder="e.g., FS-J24-A">
-                        </div>
-                        <div class="mb-3">
-                            <label for="course_id" class="form-label">Course <span class="text-danger">*</span></label>
-                            <select class="form-select" id="batch-course-id" name="course_id" required>
-                                <option value="">-- Select Course --</option>
-                                </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="total_seats" class="form-label">Total Seats <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="total_seats" name="total_seats" required min="1">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Batch</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="addStageModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Add Stage</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-stage-form"><div class="modal-body"><input class="form-control" name="stage_name" placeholder="Stage Name" required></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Add</button></div></form></div></div></div>
 
-    <div class="modal fade" id="addStageModal" tabindex="-1" aria-labelledby="addStageModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addStageModalLabel">Add New Pipeline Stage</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="add-stage-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="stage_name" class="form-label">Stage Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="stage_name" name="stage_name" required placeholder="e.g., Follow-up Sent, Scheduled Demo">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Add Stage</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addUserModalLabel">Invite New User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="add-user-form">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="user_full_name" name="full_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username (Login ID) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Temporary Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
-                            <select class="form-select" id="role" name="role" required>
-                                <option value="counselor">Counselor</option>
-                                <option value="trainer">Trainer</option>
-                                <option value="owner">Owner</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Invite User</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Invite User</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-user-form"><div class="modal-body"><input class="form-control mb-3" id="user_full_name" name="full_name" placeholder="Full Name" required><input class="form-control mb-3" id="username" name="username" placeholder="Username" required><input type="password" class="form-control mb-3" id="password" name="password" placeholder="Password" required><select class="form-select" id="role" name="role"><option value="counselor">Counselor</option><option value="admin">Admin</option></select></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Invite</button></div></form></div></div></div>
 
     <div class="modal fade" id="addCustomFieldModal" tabindex="-1" aria-labelledby="addCustomFieldModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -464,77 +279,60 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </div>
                 <form id="add-custom-field-form">
                     <input type="hidden" name="field_id" id="field_id_input">
-                    <input type="hidden" name="scoring_rules_json_hidden" id="scoring_rules_json_hidden"> <div class="modal-body">
+                    <input type="hidden" name="scoring_rules_json_hidden" id="scoring_rules_json_hidden"> 
+                    <div class="modal-body">
                         <div class="mb-3">
-                            <label for="field_name" class="form-label">Display Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="field_name" name="field_name" required placeholder="e.g., Expected Salary">
+                            <label class="form-label">Display Name</label>
+                            <input type="text" class="form-control" id="field_name" name="field_name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="field_key" class="form-label">Database Key (Alpha-numeric, auto-slugged)</label>
-                            <input type="text" class="form-control" id="field_key" name="field_key" placeholder="e.g., expected_salary">
-                            <small class="text-muted">Used as the column name in the database.</small>
+                            <label class="form-label">Database Key</label>
+                            <input type="text" class="form-control" id="field_key" name="field_key" placeholder="e.g. expected_salary">
                         </div>
                         <div class="mb-3">
-                            <label for="field_type" class="form-label">Field Type <span class="text-danger">*</span></label>
+                            <label class="form-label">Type</label>
                             <select class="form-select" id="field_type" name="field_type" required onchange="toggleFieldSections()">
-                                <option value="text">Text Input</option>
-                                <option value="number">Number Input</option>
-                                <option value="select">Dropdown (Select)</option>
+                                <option value="text">Text</option>
+                                <option value="number">Number</option>
+                                <option value="select">Dropdown</option>
                             </select>
                         </div>
                         <div class="mb-3 d-none" id="field-options-group">
-                            <label for="options" class="form-label">Dropdown Options (Comma-Separated) <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="options" name="options" rows="2" placeholder="e.g., High, Medium, Low"></textarea>
+                            <label class="form-label">Options (comma-separated)</label>
+                            <textarea class="form-control" id="options" name="options"></textarea>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="is_required" id="is_required">
-                                    <label class="form-check-label" for="is_required">Required Field</label>
+                                    <label class="form-check-label">Required</label>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="is_score_field" id="is_score_field">
-                                    <label class="form-check-label" for="is_score_field">Use for Lead Scoring</label>
-                                
+                                    <label class="form-check-label">Lead Scoring</label>
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="mb-3 d-none" id="score-rules-panel">
-                            <label class="form-label">Configure Lead Scoring Rules</label>
-                            <p class="text-muted small">Enter comma-separated values that correspond to each score level.</p>
-
-                            <div class="card card-body p-2 mb-2 border-success">
-                                <label for="rules-high" class="form-label mb-1 text-success">High Score (100 pts)</label>
-                                <textarea class="form-control form-control-sm score-input-rules" id="rules-high" data-level="High" rows="2" placeholder="e.g., Fresher, M.Tech"></textarea>
-                            </div>
-
-                            <div class="card card-body p-2 mb-2 border-warning">
-                                <label for="rules-medium" class="form-label mb-1 text-warning">Medium Score (50 pts)</label>
-                                <textarea class="form-control form-control-sm score-input-rules" id="rules-medium" data-level="Medium" rows="2" placeholder="e.g., 2-4 Years Exp, BSc"></textarea>
-                            </div>
-
-                            <div class="card card-body p-2 mb-2 border-info">
-                                <label for="rules-low" class="form-label mb-1 text-info">Low Score (25 pts)</label>
-                                <textarea class="form-control form-control-sm score-input-rules" id="rules-low" data-level="Low" rows="2" placeholder="e.g., 5+ Years Exp, Career Gap"></textarea>
-                            </div>
+                            <hr>
+                            <label class="form-label">Scoring Rules</label>
+                            <div class="mb-2"><small class="text-success">High (100pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="High"></div>
+                            <div class="mb-2"><small class="text-warning">Medium (50pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="Medium"></div>
+                            <div class="mb-2"><small class="text-info">Low (25pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="Low"></div>
                         </div>
-                        
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Field Definition</button>
+                        <button type="submit" class="btn btn-primary">Save Field</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-
-   
-    
+    <script src="/assets/js/settings_import.js"></script>
     <script src="/assets/js/settings_integrations.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/settings_courses.js"></script>
@@ -542,40 +340,21 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     <script src="/assets/js/settings_users.js"></script>
     <script src="/assets/js/settings_batches.js"></script>
     <script src="/assets/js/settings_custom_fields.js"></script>
-    <script src="/assets/js/settings_import.js"></script>
     
     <script>
-        // CRITICAL: App ID used for SDK initialization
         window.META_APP_ID = '1170946974995892'; 
-
-        // Load the Meta SDK asynchronously
         window.fbAsyncInit = function() {
-            FB.init({
-                appId      : window.META_APP_ID,
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v19.0', 
-                status     : true, // IMPORTANT: Attempts to get login status on init
-                oauth      : true  // IMPORTANT: Enables OAuth flow handling
-            });
-            
-            // After initialization, check connection status
+            FB.init({ appId: window.META_APP_ID, cookie: true, xfbml: true, version: 'v19.0', status: true, oauth: true });
             checkMetaConnectionStatus();
         };
-
-        // Load the SDK script
         (function(d, s, id){
             var js, fjs = d.getElementsByTagName(s)[0];
             if (d.getElementById(id)) {return;}
             js = d.createElement(s); js.id = id;
-            
-            // NOTE: Using window.location.protocol ensures the SDK loads using HTTPS
-            // when running via Ngrok, mitigating persistent caching errors.
             js.src = window.location.protocol + "//connect.facebook.net/en_US/sdk.js";
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
     </script>
     
 </body>
-
 </html>

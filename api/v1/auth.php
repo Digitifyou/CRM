@@ -25,9 +25,9 @@ try {
     $username = $data['username'];
     $password = $data['password'];
 
-    // 1. Fetch user data and hash
+    // 1. Fetch user data and hash (UPDATED to include academy_id)
     $stmt = $pdo->prepare("
-        SELECT user_id, password_hash, full_name, role, is_active 
+        SELECT user_id, password_hash, full_name, role, is_active, academy_id 
         FROM users 
         WHERE username = ?
     ");
@@ -57,18 +57,20 @@ try {
         exit;
     }
     
-    // 4. Authentication Successful - SET SESSION VARIABLES
+    // 4. Authentication Successful - SET SESSION VARIABLES (UPDATED to include academy_id)
     $_SESSION['user_id'] = $user['user_id'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['role'] = $user['role'];
     $_SESSION['logged_in'] = true; 
+    $_SESSION['academy_id'] = $user['academy_id']; // <-- NEW
 
     http_response_code(200);
     echo json_encode([
         'message' => 'Login successful.',
         'user_id' => $user['user_id'],
         'full_name' => $user['full_name'],
-        'role' => $user['role']
+        'role' => $user['role'],
+        'academy_id' => $user['academy_id'] // <-- NEW
     ]);
 
 } catch (\PDOException $e) {

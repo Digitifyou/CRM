@@ -2,10 +2,10 @@
 
 const COURSES_API = '/api/v1/courses.php';
 
-// --- DOM Elements ---
-const courseTableBody = document.getElementById('course-list-table');
-const addCourseForm = document.getElementById('add-course-form');
-const addCourseModal = new bootstrap.Modal(document.getElementById('addCourseModal'));
+// Variables now placeholders
+let courseTableBody;
+let addCourseForm;
+let addCourseModal;
 
 /**
  * Renders the list of courses into the table
@@ -123,11 +123,25 @@ async function deleteCourse(courseId) {
 
 // --- Global Functions and Event Listeners ---
 
-// Attach deleteCourse to window so it can be called from onclick in renderCourseTable
 window.deleteCourse = deleteCourse;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Element Lookups & Modal Instantiation
+    courseTableBody = document.getElementById('course-list-table');
+    addCourseForm = document.getElementById('add-course-form');
+
+    if (typeof bootstrap !== 'undefined') {
+        const addCourseModalElement = document.getElementById('addCourseModal');
+        if (addCourseModalElement) {
+            addCourseModal = new bootstrap.Modal(addCourseModalElement);
+        }
+    }
+    
+    // 2. Initial Load Logic
     loadCourses(); // Initial load of the course list
 
-    addCourseForm.addEventListener('submit', handleAddCourse);
+    // 3. Event Listeners
+    if (addCourseForm) {
+        addCourseForm.addEventListener('submit', handleAddCourse);
+    }
 });

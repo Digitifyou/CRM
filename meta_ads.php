@@ -1,44 +1,7 @@
 <?php
 // SECURITY CHECK: Ensure user is logged in
-require_once __DIR__ . '/api/config.php'; 
-
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('Location: login.html');
-    exit;
-}
+include 'header.php'; 
 ?>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM - Meta Ads Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        .kpi-card { min-height: 120px; }
-    </style>
-</head>
-
-<body>
-
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Training Academy CRM</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard.php">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/students.php">Students</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/meta_ads.php">Meta Ads</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container-fluid px-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Meta Ads Performance Dashboard</h2>
             <button class="btn btn-sm btn-outline-secondary" onclick="loadAdsData()"><i class="bi bi-arrow-clockwise"></i> Refresh Data</button>
@@ -109,10 +72,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </div>
             </div>
         </div>
-    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/meta_ads.js" defer></script>
-</body>
-
-</html>
+<?php include 'footer.php'; ?>

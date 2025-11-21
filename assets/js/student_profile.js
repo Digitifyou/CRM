@@ -403,13 +403,11 @@ function getLogTypeBadge(type) {
     }
 }
 
-// --- Event Listeners & Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
     loadStudentProfile();
     addActivityForm.addEventListener('submit', handleAddActivity);
     
-    // Attaches listeners to buttons retrieved at the top of the script
     if (editToggleButton) editToggleButton.addEventListener('click', () => toggleEditMode(true));
     if (cancelButton) cancelButton.addEventListener('click', () => {
         // Reset inputs to original data before toggling back

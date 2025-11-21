@@ -7,11 +7,22 @@ require_once __DIR__ . '/../config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- MULTI-TENANCY CHECK ---
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+$academy_id = ACADEMY_ID; 
+// ---------------------------
+
 try {
     switch ($method) {
         // --- READ (Get all saved mappings) ---
         case 'GET':
-            $stmt = $pdo->query("SELECT meta_field_name, crm_field_key, is_built_in FROM meta_field_mapping");
+            // SCOPED: Filter by academy_id
+            $stmt = $pdo->prepare("SELECT meta_field_name, crm_field_key, is_built_in FROM meta_field_mapping WHERE academy_id = ?");
+            $stmt->execute([$academy_id]);
             $mappings = $stmt->fetchAll();
             
             // Reformat as an associative array for easier JS use
@@ -37,19 +48,19 @@ try {
 
             $pdo->beginTransaction();
 
-            // Clear all existing mappings first (simplified bulk update method)
-            $pdo->exec("TRUNCATE TABLE meta_field_mapping"); 
+            // SCOPED: Delete only existing mappings for THIS academy
+            $pdo->prepare("DELETE FROM meta_field_mapping WHERE academy_id = ?")->execute([$academy_id]); 
 
-            $sql = "INSERT INTO meta_field_mapping (meta_field_name, crm_field_key, is_built_in) VALUES (?, ?, ?)";
+            $sql = "INSERT INTO meta_field_mapping (meta_field_name, crm_field_key, is_built_in, academy_id) VALUES (?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
 
             foreach ($mappingData as $metaField => $crmFieldConfig) {
-                // Ensure a target key exists before inserting (user might have selected "-- Ignore")
                 if (!empty($crmFieldConfig['crm_field_key'])) {
                     $stmt->execute([
                         $metaField,
                         $crmFieldConfig['crm_field_key'],
-                        (bool)$crmFieldConfig['is_built_in']
+                        (bool)$crmFieldConfig['is_built_in'],
+                        $academy_id // SCOPED: Insert with academy_id
                     ]);
                 }
             }

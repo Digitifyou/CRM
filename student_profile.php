@@ -1,59 +1,8 @@
 <?php
 // SECURITY CHECK: Ensure user is logged in
-require_once __DIR__ . '/api/config.php'; 
-
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('Location: login.html');
-    exit;
-}
+include 'header.php'; 
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM - Student Profile</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        
-        .activity-card {
-            border-left: 3px solid var(--bs-primary);
-            border-radius: 0;
-        }
-
-        /* Styling for editable fields */
-        .detail-value {
-            display: inline-block;
-            min-width: 100px;
-        }
-        .detail-input {
-            display: none;
-        }
-    </style>
-</head>
-
-<body>
-
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Training Academy CRM</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard.php">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/students.php">Students</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0" id="profile-name">Loading Student...</h2>
             <span class="badge bg-secondary" id="student-status-badge"></span>
@@ -61,7 +10,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
         <div class="row">
             <div class="col-lg-5">
-                <div class="card mb-4">
+                <div class="card mb-4 shadow">
                     <div class="card-header bg-primary text-white">
                         <i class="bi bi-person-circle me-2"></i> Student Details
                     </div>
@@ -148,7 +97,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     </form>
                 </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4 shadow">
                     <div class="card-header bg-info text-white">
                         <i class="bi bi-bar-chart-line me-2"></i> Enrollment & Deal History
                     </div>
@@ -159,7 +108,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             </div>
 
             <div class="col-lg-7">
-                <div class="card mb-4">
+                <div class="card mb-4 shadow">
                     <div class="card-body">
                         <h5 class="card-title">Log New Activity</h5>
                         <form id="add-activity-form">
@@ -192,11 +141,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 </div>
             </div>
         </div>
-    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/student_profile.js" defer></script>
     <script src="/assets/js/settings_courses.js" defer></script>
-</body>
-
-</html>
+<?php include 'footer.php'; ?>

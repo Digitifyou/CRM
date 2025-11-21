@@ -27,7 +27,6 @@ async function loadDashboardData() {
 
     } catch (error) {
         console.error('Error loading dashboard data:', error);
-        alert('Failed to load dashboard data. Please check the API.');
         funnelLoading.textContent = 'Failed to load chart data.';
     }
 }

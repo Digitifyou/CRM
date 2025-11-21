@@ -6,11 +6,21 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- MULTI-TENANCY CHECK ---
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+$academy_id = ACADEMY_ID;
+// ---------------------------
+
 try {
     switch ($method) {
         // --- READ (Get all batches, joined with course name) ---
         case 'GET':
-            $stmt = $pdo->query("
+            // SCOPED: Filter by academy_id on batches table
+            $stmt = $pdo->prepare("
                 SELECT 
                     b.batch_id, 
                     b.batch_name, 
@@ -20,8 +30,10 @@ try {
                     c.course_name
                 FROM batches b
                 JOIN courses c ON b.course_id = c.course_id
+                WHERE b.academy_id = ?
                 ORDER BY b.start_date DESC
             ");
+            $stmt->execute([$academy_id]);
             $batches = $stmt->fetchAll();
             echo json_encode($batches);
             break;
@@ -36,13 +48,15 @@ try {
                  exit;
             }
 
-            $sql = "INSERT INTO batches (course_id, batch_name, start_date, total_seats) VALUES (?, ?, ?, ?)";
+            // SCOPED: Insert with academy_id
+            $sql = "INSERT INTO batches (course_id, batch_name, start_date, total_seats, academy_id) VALUES (?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 (int)$data['course_id'],
                 $data['batch_name'],
                 $data['start_date'],
-                (int)$data['total_seats']
+                (int)$data['total_seats'],
+                $academy_id
             ]);
             
             http_response_code(201); // Created
@@ -51,9 +65,8 @@ try {
 
         // --- UPDATE ---
         case 'PUT':
-            // Update logic for editing batch details (e.g., total_seats, start_date)
-            // Note: filled_seats would be updated automatically by Enrollment logic
-            http_response_code(501); // Not Implemented
+            // SCOPED: Update check
+            http_response_code(501); 
             echo json_encode(['error' => 'Batch update not yet implemented']);
             break;
 
@@ -67,12 +80,9 @@ try {
             
             $id = $_GET['id'];
             
-            // Note: The 'batches' table has ON DELETE CASCADE on 'course_id', 
-            // but we should check if any students are enrolled in this batch
-            // before allowing deletion (this check is skipped for MVP simplicity).
-            
-            $stmt = $pdo->prepare("DELETE FROM batches WHERE batch_id = ?");
-            $stmt->execute([$id]);
+            // SCOPED: Delete check
+            $stmt = $pdo->prepare("DELETE FROM batches WHERE batch_id = ? AND academy_id = ?");
+            $stmt->execute([$id, $academy_id]);
             
             echo json_encode(['message' => 'Batch deleted']);
             break;

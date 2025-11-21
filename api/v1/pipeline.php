@@ -6,16 +6,28 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- MULTI-TENANCY CHECK ---
+// Assuming ACADEMY_ID is defined in config.php from the session
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+$academy_id = ACADEMY_ID;
+// ---------------------------
+
 try {
     switch ($method) {
         // --- READ (Get all pipeline stages) ---
         case 'GET':
-            // Get all pipeline stages, ordered by their 'stage_order'
-            $stmt = $pdo->query("
+            // Scoped by academy_id
+            $stmt = $pdo->prepare("
                 SELECT stage_id, stage_name, stage_order 
                 FROM pipeline_stages 
+                WHERE academy_id = ? 
                 ORDER BY stage_order ASC
             ");
+            $stmt->execute([$academy_id]); 
             $stages = $stmt->fetchAll();
             echo json_encode($stages);
             break;
@@ -30,15 +42,18 @@ try {
                  exit;
             }
             
-            // Find the highest existing order and add 1
-            $order_stmt = $pdo->query("SELECT MAX(stage_order) FROM pipeline_stages");
+            // Find the highest existing order for THIS academy
+            $order_stmt = $pdo->prepare("SELECT MAX(stage_order) FROM pipeline_stages WHERE academy_id = ?");
+            $order_stmt->execute([$academy_id]); 
             $new_order = $order_stmt->fetchColumn() + 1;
 
-            $sql = "INSERT INTO pipeline_stages (stage_name, stage_order) VALUES (?, ?)";
+            // INSERT with academy_id
+            $sql = "INSERT INTO pipeline_stages (stage_name, stage_order, academy_id) VALUES (?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $data['stage_name'],
-                $new_order
+                $new_order,
+                $academy_id
             ]);
             
             http_response_code(201); // Created
@@ -55,17 +70,18 @@ try {
                 exit;
             }
 
+            // All updates must be scoped by academy_id
             if (isset($data['stage_name'])) {
                 // Update stage name
-                $sql = "UPDATE pipeline_stages SET stage_name = ? WHERE stage_id = ?";
+                $sql = "UPDATE pipeline_stages SET stage_name = ? WHERE stage_id = ? AND academy_id = ?";
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$data['stage_name'], (int)$data['stage_id']]);
+                $stmt->execute([$data['stage_name'], (int)$data['stage_id'], $academy_id]);
 
             } else if (isset($data['stage_order'])) {
                 // Update stage order (used for drag-and-drop reordering)
-                $sql = "UPDATE pipeline_stages SET stage_order = ? WHERE stage_id = ?";
+                $sql = "UPDATE pipeline_stages SET stage_order = ? WHERE stage_id = ? AND academy_id = ?";
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([(int)$data['stage_order'], (int)$data['stage_id']]);
+                $stmt->execute([(int)$data['stage_order'], (int)$data['stage_id'], $academy_id]);
             
             } else {
                 http_response_code(400);
@@ -86,17 +102,23 @@ try {
             
             $id = $_GET['id'];
 
-            // CRITICAL: Check if any enrollments are linked to this stage
-            $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM enrollments WHERE pipeline_stage_id = ?");
-            $check_stmt->execute([$id]);
+            // Check if any enrollments are linked to this stage by joining through the students table
+            $check_stmt = $pdo->prepare("
+                SELECT COUNT(e.enrollment_id) 
+                FROM enrollments e 
+                JOIN students s ON e.student_id = s.student_id
+                WHERE e.pipeline_stage_id = ? AND s.academy_id = ?
+            ");
+            $check_stmt->execute([$id, $academy_id]); 
+
             if ($check_stmt->fetchColumn() > 0) {
                 http_response_code(409); // Conflict
                 echo json_encode(['error' => 'Cannot delete stage. It is currently linked to one or more open enrollments. Move them first.']);
                 exit;
             }
             
-            $stmt = $pdo->prepare("DELETE FROM pipeline_stages WHERE stage_id = ?");
-            $stmt->execute([$id]);
+            $stmt = $pdo->prepare("DELETE FROM pipeline_stages WHERE stage_id = ? AND academy_id = ?");
+            $stmt->execute([$id, $academy_id]); 
             
             echo json_encode(['message' => 'Pipeline stage deleted']);
             break;

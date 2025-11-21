@@ -38,6 +38,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     <li class="nav-item"><a class="nav-link active" href="/students.php">Students</a></li>
                     <li class="nav-item"><a class="nav-link" href="/enrollments.php">Enrollments</a></li>
                     <li class="nav-item"><a class="nav-link" href="/settings.php">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/meta_ads.php">Meta Ads</a></li>
                 </ul>
             </div>
         </div>
@@ -60,7 +61,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 
         <div class="card">
             <div class="card-body">
-                <table class="table table-hover">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -69,11 +70,12 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                             <th>Course Interested</th>
                             <th>Lead Score</th>
                             <th>Inquiry Date</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="student-list-table">
                         <tr>
-                            <td colspan="6" class="text-center">Loading...</td>
+                            <td colspan="7" class="text-center">Loading...</td>
                         </tr>
                     </tbody>
                 </table>

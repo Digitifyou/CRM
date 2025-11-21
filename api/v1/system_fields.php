@@ -6,11 +6,22 @@ require_once __DIR__ . '/../config.php'; // $pdo connection
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- MULTI-TENANCY CHECK ---
+if (!defined('ACADEMY_ID') || ACADEMY_ID === 0) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: No Academy Context.']);
+    exit;
+}
+$academy_id = ACADEMY_ID;
+// ---------------------------
+
 try {
     switch ($method) {
         // --- READ (Get all configured system fields) ---
         case 'GET':
-            $stmt = $pdo->query("SELECT * FROM system_field_config");
+            // SCOPED: Filter by academy_id
+            $stmt = $pdo->prepare("SELECT * FROM system_field_config WHERE academy_id = ?");
+            $stmt->execute([$academy_id]);
             $config = $stmt->fetchAll();
             
             // Return an associative array keyed by field_key for easy lookup in JS
@@ -31,46 +42,47 @@ try {
                  exit;
             }
             
-            // Check if the field already exists
-            $check_stmt = $pdo->prepare("SELECT id FROM system_field_config WHERE field_key = ?");
-            $check_stmt->execute([$data['field_key']]);
+            // Check if the field already exists for THIS academy (SCOPED)
+            $check_stmt = $pdo->prepare("SELECT id FROM system_field_config WHERE field_key = ? AND academy_id = ?");
+            $check_stmt->execute([$data['field_key'], $academy_id]);
             $existing_id = $check_stmt->fetchColumn();
 
             $is_required = (bool)($data['is_required'] ?? false);
             $is_score_field = (bool)($data['is_score_field'] ?? false);
 
-            // Options and Rules come from the client
             $scoring_rules = $data['scoring_rules'] ?? null;
             $display_name = $data['field_name'] ?? null;
 
             if ($existing_id) {
-                // UPDATE
+                // UPDATE (SCOPED)
                 $sql = "UPDATE system_field_config SET 
                             display_name = ?, 
                             is_required = ?, 
                             is_score_field = ?, 
                             scoring_rules = ?
-                        WHERE id = ?";
+                        WHERE id = ? AND academy_id = ?";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $display_name,
                     $is_required,
                     $is_score_field,
                     $scoring_rules,
-                    $existing_id
+                    $existing_id,
+                    $academy_id
                 ]);
             } else {
-                // INSERT
+                // INSERT (Add academy_id)
                 $sql = "INSERT INTO system_field_config 
-                            (field_key, display_name, is_required, is_score_field, scoring_rules) 
-                        VALUES (?, ?, ?, ?, ?)";
+                            (field_key, display_name, is_required, is_score_field, scoring_rules, academy_id) 
+                        VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     $data['field_key'],
                     $display_name,
                     $is_required,
                     $is_score_field,
-                    $scoring_rules
+                    $scoring_rules,
+                    $academy_id
                 ]);
             }
             

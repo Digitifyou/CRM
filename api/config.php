@@ -47,7 +47,18 @@ try {
     exit;
 }
 
-// 4. Meta Config
+// 4. Academy Config (NEW MULTI-TENANCY LOGIC)
+if (isset($_SESSION['academy_id'])) {
+    define('ACADEMY_ID', (int)$_SESSION['academy_id']);
+} else {
+    // If not set, use 0 or handle redirect logic in individual pages
+    define('ACADEMY_ID', 0); 
+}
+
+// 5. User Role Constant (Owner role is used by the new setup endpoint)
+define('ROLE_OWNER', 'owner');
+
+// 6. Meta Config
 define('META_APP_ID', '1170946974995892');
 define('META_APP_SECRET', '377431f42d7f0e4ba17dadbe867f329b');
 ?>

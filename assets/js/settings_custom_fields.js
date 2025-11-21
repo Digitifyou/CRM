@@ -20,31 +20,24 @@ let DEFAULT_FIELDS = [
 let allFieldsCache = {};
 
 
-// --- DOM Elements ---
-const customFieldsTableBody = document.getElementById('custom-fields-list-table');
-const addCustomFieldForm = document.getElementById('add-custom-field-form');
-const addCustomFieldModal = new bootstrap.Modal(document.getElementById('addCustomFieldModal'));
-const customFieldsPane = document.getElementById('custom-fields-pane');
+// --- DOM Elements (now placeholders) ---
+let customFieldsTableBody;
+let addCustomFieldForm;
+let addCustomFieldModal;
+let customFieldsPane;
 
-const fieldOptionsGroup = document.getElementById('field-options-group');
-const fieldOptionsTextarea = document.getElementById('options');
-const isScoreFieldCheckbox = document.getElementById('is_score_field');
+let fieldOptionsGroup;
+let fieldOptionsTextarea;
+let isScoreFieldCheckbox;
+let scoreRulesPanel;
+let scoreRuleInputs;
 
-// Get hidden rule input and score weight select separately for safety checks
-const hiddenRulesInput = document.getElementById('scoring_rules_json_hidden');
-const scoreWeightLevelSelect = document.getElementById('score_weight_level');
-
-// NEW/MODIFIED ELEMENTS FOR SCORING UI
-const scoreRulesPanel = document.getElementById('score-rules-panel');
-const scoreRuleInputs = document.querySelectorAll('.score-input-rules'); // Get all High/Medium/Low textareas
-
-
-const modalTitle = document.getElementById('addCustomFieldModalLabel');
-const fieldIdInput = document.getElementById('field_id_input');
-const fieldKeyInput = document.getElementById('field_key');
-const fieldNameInput = document.getElementById('field_name');
-const fieldTypeSelect = document.getElementById('field_type');
-const isRequiredCheckbox = document.getElementById('is_required');
+let modalTitle;
+let fieldIdInput;
+let fieldKeyInput;
+let fieldNameInput;
+let fieldTypeSelect;
+let isRequiredCheckbox;
 
 
 /**
@@ -54,14 +47,12 @@ function toggleFieldSections() {
     const isSelect = fieldTypeSelect.value === 'select';
     const isScored = isScoreFieldCheckbox.checked;
 
-    // 1. Toggle Options Input (needed for select fields only)
     if (isSelect) {
         fieldOptionsGroup.classList.remove('d-none');
     } else {
         fieldOptionsGroup.classList.add('d-none');
     }
     
-    // 2. Toggle Score Rule Panel
     if (isScored) {
         scoreRulesPanel.classList.remove('d-none');
     } else {
@@ -80,7 +71,6 @@ function populateRuleInputs(rulesJson) {
     
     if (rulesJson) {
         try {
-            // Note: Scoring rules are stored as a stringified JSON object
             rules = JSON.parse(rulesJson);
         } catch (e) {
             console.error("Error parsing scoring rules JSON:", e);
@@ -96,7 +86,6 @@ function populateRuleInputs(rulesJson) {
 
 /**
  * Merges loaded system configurations with the hardcoded DEFAULT_FIELDS array.
- * This is the crucial step to making built-in field changes persist across sessions.
  * @param {Object} config - Object containing system_field_config data keyed by field_key.
  */
 function applySystemConfig(config) {
@@ -104,10 +93,8 @@ function applySystemConfig(config) {
         const key = defaultField.field_key;
         if (config[key]) {
             const saved = config[key];
-            // Merge saved configuration into the default definition
             return {
                 ...defaultField,
-                // Only overwrite fields that are configurable (name, required, scoring)
                 field_name: saved.display_name || defaultField.field_name,
                 is_required: saved.is_required == 1,
                 is_score_field: saved.is_score_field == 1,
@@ -153,10 +140,9 @@ async function renderCustomFieldsTable(customFields) {
         const isDefault = field.is_default || false;
         const isScoreLocked = isDefault && field.field_key === 'lead_score'; 
         
-        // Determine score display: Configured or Simple
         let scoreDisplay;
         if (field.is_score_field) {
-            const hasRules = field.scoring_rules && field.scoring_rules.length > 2; // Check if rules JSON is present
+            const hasRules = field.scoring_rules && field.scoring_rules.length > 2; 
             const scoreText = hasRules ? 'Rules Set' : 'Simple Yes/No';
 
             scoreDisplay = `<i class="bi bi-star-fill text-warning me-1"></i> ${scoreText}`;
@@ -203,7 +189,6 @@ async function loadCustomFields() {
     try {
         customFieldsTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Loading custom fields...</td></tr>';
         
-        // Fetch custom fields and system configuration in parallel
         const [customResponse, systemResponse] = await Promise.all([
             fetch(API_CUSTOM_FIELDS),
             fetch(API_SYSTEM_FIELDS)
@@ -215,7 +200,6 @@ async function loadCustomFields() {
         const customFields = await customResponse.json();
         const systemConfig = await systemResponse.json();
 
-        // MERGE: Apply saved configuration to the default fields array
         applySystemConfig(systemConfig);
 
         renderCustomFieldsTable(customFields);
@@ -238,33 +222,27 @@ function editCustomField(event) {
     
     const isCustom = fieldData.field_id > 0;
     
-    // 1. Reset and Set IDs
     resetAddModal();
     modalTitle.textContent = `Edit Field: ${fieldData.field_name}`;
     fieldIdInput.value = isCustom ? fieldData.field_id : fieldData.field_key; 
     
-    // 2. Populate form fields
     fieldNameInput.value = fieldData.field_name;
     fieldKeyInput.value = fieldData.field_key;
     fieldTypeSelect.value = fieldData.field_type;
     
-    // Checkboxes 
     isRequiredCheckbox.checked = fieldData.is_required;
     isScoreFieldCheckbox.checked = fieldData.is_score_field;
     
-    // Score Weight and Rules 
+    const hiddenRulesInput = document.getElementById('scoring_rules_json_hidden');
     if (hiddenRulesInput) {
         hiddenRulesInput.value = fieldData.scoring_rules || ''; 
     }
     
-    // 3. Handle field locking for built-in fields
     fieldKeyInput.disabled = true; 
     fieldTypeSelect.disabled = !isCustom;
     
-    // 4. Handle Lead Score lock
     isScoreFieldCheckbox.disabled = fieldData.field_key === 'lead_score';
     
-    // 5. Handle Select options
     fieldOptionsTextarea.value = '';
     if (fieldData.field_type === 'select') {
         let optionsDisplay = fieldData.options;
@@ -277,14 +255,11 @@ function editCustomField(event) {
         fieldOptionsTextarea.disabled = !isCustom; 
     } 
 
-    // 6. Toggle visibility and generate dynamic elements
     toggleFieldSections();
-    // Re-run rule population for all fields that are scored
     if (isScoreFieldCheckbox.checked) {
          populateRuleInputs(fieldData.scoring_rules);
     }
 
-    // 7. Open Modal
     addCustomFieldModal.show();
 }
 window.editCustomField = editCustomField;
@@ -301,15 +276,13 @@ function resetAddModal() {
     isScoreFieldCheckbox.disabled = false;
     fieldOptionsTextarea.disabled = false;
     
-    // Reset score related fields before calling form.reset()
-    if (scoreWeightLevelSelect) scoreWeightLevelSelect.value = 'Low'; 
+    const hiddenRulesInput = document.getElementById('scoring_rules_json_hidden');
     if (hiddenRulesInput) hiddenRulesInput.value = '';
     
     addCustomFieldForm.reset(); 
     
-    // Reset visibility and dynamic containers
     toggleFieldSections(); 
-    populateRuleInputs(null); // Clear rule inputs
+    populateRuleInputs(null); 
 }
 
 /**
@@ -319,14 +292,11 @@ async function handleAddCustomField(event) {
     event.preventDefault();
 
     const isUpdate = !!fieldIdInput.value;
-    // Check if it's a built-in field (non-numeric key or negative ID)
     const isDefaultField = isUpdate && isNaN(parseInt(fieldIdInput.value)) || parseInt(fieldIdInput.value) < 0; 
     
     const formData = new FormData(addCustomFieldForm);
     const fieldData = {};
     
-    // --- Manual Serialization of Input Values to ensure fresh data ---
-    // Read values directly from the DOM elements
     fieldData.field_name = fieldNameInput.value;
     fieldData.field_key = fieldKeyInput.value;
     fieldData.field_type = fieldTypeSelect.value;
@@ -336,15 +306,15 @@ async function handleAddCustomField(event) {
     
     if (isUpdate) fieldData.field_id = fieldIdInput.value;
 
+    const hiddenRulesInput = document.getElementById('scoring_rules_json_hidden');
 
-    // 1. Serialize Scoring Rules
     if (fieldData.is_score_field) {
         const rules = {};
         scoreRuleInputs.forEach(input => {
             const level = input.getAttribute('data-level');
             const values = input.value.split(',').map(v => v.trim()).filter(v => v.length > 0);
             if (values.length > 0) {
-                rules[level] = input.value; // Store as comma-separated string for simplicity
+                rules[level] = input.value; 
             }
         });
         fieldData.scoring_rules = JSON.stringify(rules);
@@ -352,17 +322,14 @@ async function handleAddCustomField(event) {
         fieldData.scoring_rules = null;
     }
     
-    // Remove fields not needed for specific actions
     delete fieldData.score_weight_level; 
     if (isUpdate) delete fieldData.field_key;
 
 
-    // --- LOGIC: HANDLE DEFAULT FIELD UPDATE (DATABASE PERSISTENCE) ---
     if (isUpdate && isDefaultField) {
-        // The endpoint is different for system fields
         try {
             const response = await fetch(API_SYSTEM_FIELDS, {
-                method: 'POST', // Use POST for UPSERT
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     field_key: fieldIdInput.value,
@@ -378,7 +345,6 @@ async function handleAddCustomField(event) {
                  throw new Error(errorData.error || 'Failed to save built-in field config');
             }
 
-            // After successful DB save, refresh the UI
             addCustomFieldModal.hide();
             alert('Built-in Field settings updated successfully!');
             await loadCustomFields();
@@ -390,10 +356,8 @@ async function handleAddCustomField(event) {
              return;
         }
     }
-    // --- END DEFAULT FIELD UPDATE LOGIC ---
 
 
-    // --- LOGIC: HANDLE CUSTOM FIELD UPDATE (API CALL - Original logic) ---
     try {
         if (isUpdate) {
             fieldData.field_id = parseInt(fieldIdInput.value); 
@@ -414,7 +378,7 @@ async function handleAddCustomField(event) {
 
         resetAddModal();
         addCustomFieldModal.hide(); 
-        await loadCustomFields(); // Refresh the list
+        await loadCustomFields(); 
         alert(`Custom Field successfully ${isUpdate ? 'updated' : 'added'}!`);
 
     } catch (error) {
@@ -455,40 +419,44 @@ async function deleteCustomField(fieldId) {
 
 // --- Event Listeners ---
 
-// Listen for input changes on score rules textareas to keep the rule JSON updated locally
-scoreRuleInputs.forEach(input => {
-    input.addEventListener('input', () => {
-        // No action needed here, serialization happens on submit.
-    });
-});
-
-// Hide/Show sections based on type and score checkbox
-if (fieldTypeSelect) fieldTypeSelect.addEventListener('change', toggleFieldSections);
-if (isScoreFieldCheckbox) isScoreFieldCheckbox.addEventListener('change', toggleFieldSections);
-
-
-// Event listener for when the Custom Fields tab is clicked
-if (customFieldsPane) {
-    customFieldsPane.addEventListener('show.bs.tab', loadCustomFields);
-}
-
-// Event listener for when the modal is about to be shown (used only for CREATE button)
-const addModalEl = document.getElementById('addCustomFieldModal');
-if (addModalEl) {
-    addModalEl.addEventListener('show.bs.modal', function(event) {
-        if (event.relatedTarget && event.relatedTarget.getAttribute('data-bs-target') === '#addCustomFieldModal') {
-             if (!fieldIdInput.value || fieldIdInput.value < 0) {
-                resetAddModal();
-             }
-        }
-    });
-}
-
-
 document.addEventListener('DOMContentLoaded', () => {
-    // MODIFIED: Unconditionally load fields so data is available immediately
+    // 1. Element Lookups & Modal Instantiation
+    customFieldsTableBody = document.getElementById('custom-fields-list-table');
+    addCustomFieldForm = document.getElementById('add-custom-field-form');
+    customFieldsPane = document.getElementById('custom-fields-pane');
+    
+    fieldOptionsGroup = document.getElementById('field-options-group');
+    fieldOptionsTextarea = document.getElementById('options');
+    isScoreFieldCheckbox = document.getElementById('is_score_field');
+    scoreRulesPanel = document.getElementById('score-rules-panel');
+    scoreRuleInputs = document.querySelectorAll('.score-input-rules');
+    
+    modalTitle = document.getElementById('addCustomFieldModalLabel');
+    fieldIdInput = document.getElementById('field_id_input');
+    fieldKeyInput = document.getElementById('field_key');
+    fieldNameInput = document.getElementById('field_name');
+    fieldTypeSelect = document.getElementById('field_type');
+    isRequiredCheckbox = document.getElementById('is_required');
+
+
+    if (typeof bootstrap !== 'undefined') {
+        const addCustomFieldModalElement = document.getElementById('addCustomFieldModal');
+        if (addCustomFieldModalElement) {
+            addCustomFieldModal = new bootstrap.Modal(addCustomFieldModalElement);
+        }
+    }
+    
+    // 2. Initial Load Logic
     loadCustomFields();
     
+    // 3. Event Listeners
+    document.getElementById('field_type').addEventListener('change', toggleFieldSections);
+    isScoreFieldCheckbox.addEventListener('change', toggleFieldSections);
+    
+    if (customFieldsPane) {
+        customFieldsPane.addEventListener('show.bs.tab', loadCustomFields);
+    }
+
     if (addCustomFieldForm) {
         addCustomFieldForm.addEventListener('submit', handleAddCustomField);
     }
