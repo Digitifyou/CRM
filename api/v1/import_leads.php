@@ -1,19 +1,22 @@
 <?php
 // /api/v1/import_leads.php
 
-// CRITICAL: Turn off display_errors so warnings don't break JSON
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../config.php'; 
-require_once __DIR__ . '/students.php'; // Functions available, main logic skipped
+// FIXED: Include the helper, NOT the controller
+require_once __DIR__ . '/helpers/scoring_helper.php'; 
+
+if (!defined('ACADEMY_ID')) {
+    http_response_code(403); echo json_encode(['error' => 'Forbidden: No Academy Context.']); exit;
+}
+$academy_id = ACADEMY_ID;
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method Not Allowed']);
-    exit;
+    http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit;
 }
 
 try {
@@ -21,9 +24,7 @@ try {
     $data = json_decode($input, true);
 
     if (empty($data['import_data']) || empty($data['field_mapping'])) {
-         http_response_code(400); 
-         echo json_encode(['error' => 'Import data and field mapping are required']);
-         exit;
+         http_response_code(400); echo json_encode(['error' => 'Import data and field mapping are required']); exit;
     }
 
     $import_data = $data['import_data'];
@@ -31,17 +32,21 @@ try {
     $success_count = 0;
     $error_details = [];
     
-    // Default assignment (Logged in user or Admin ID 1)
     $assigned_user_id = $_SESSION['user_id'] ?? 1; 
-    
-    // FIXED: Hardcode Academy ID as requested
-    $academy_id = 12;
 
-    $stage_stmt = $pdo->query("SELECT stage_id FROM pipeline_stages ORDER BY stage_order ASC LIMIT 1");
+    // SCOPED: Fetch stage for this academy
+    $stage_stmt = $pdo->prepare("SELECT stage_id FROM pipeline_stages WHERE academy_id = ? ORDER BY stage_order ASC LIMIT 1");
+    $stage_stmt->execute([$academy_id]);
     $first_stage_id = $stage_stmt->fetchColumn();
 
     if (!$first_stage_id) {
-         throw new Exception('Pipeline stages are not defined. Cannot create enrollments.');
+         // Fallback to system default (0)
+         $stage_stmt = $pdo->prepare("SELECT stage_id FROM pipeline_stages WHERE academy_id = 0 ORDER BY stage_order ASC LIMIT 1");
+         $stage_stmt->execute();
+         $first_stage_id = $stage_stmt->fetchColumn();
+         if (!$first_stage_id) {
+             throw new Exception('Pipeline stages are not defined.');
+         }
     }
 
     $pdo->beginTransaction();
@@ -54,7 +59,6 @@ try {
         ];
         $custom_data = [];
 
-        // 1. Map data
         foreach ($row as $source_column => $value) {
             $crm_field_key = $field_mapping[$source_column] ?? null;
             if ($crm_field_key) {
@@ -67,13 +71,11 @@ try {
         }
         $lead['custom_data'] = $custom_data;
         
-        // 2. Validation
         if (empty($lead['full_name']) || empty($lead['phone'])) {
             $error_details[] = ['row' => $row_index + 1, 'error' => 'Missing required Name or Phone.'];
             continue;
         }
 
-        // 3. Insertion
         try {
             $course_id = $lead['course_interested_id'] ? (int)$lead['course_interested_id'] : null;
             $course_fee = 0;
@@ -84,25 +86,23 @@ try {
                  $course_fee = $fee_stmt->fetchColumn() ?: 0;
             }
 
-            // FIXED: Added academy_id to INSERT
             $sql = "INSERT INTO students (full_name, email, phone, status, course_interested_id, lead_source, qualification, work_experience, custom_data, academy_id) VALUES (?, ?, ?, 'inquiry', ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 $lead['full_name'], $lead['email'], $lead['phone'],
                 $course_id, $lead['lead_source'], $lead['qualification'],
                 $lead['work_experience'], json_encode($lead['custom_data']),
-                $academy_id // Passing 12 here
+                $academy_id
             ]);
             
             $new_id = $pdo->lastInsertId();
             
-            // Score lead
-            calculateAndUpdateLeadScoreInline($pdo, $new_id, $lead);
+            // USE HELPER FUNCTION
+            calculateLeadScore($pdo, $new_id, $academy_id, $lead);
             
-            // Create Enrollment
-            $enroll_sql = "INSERT INTO enrollments (student_id, course_id, assigned_to_user_id, pipeline_stage_id, total_fee_agreed) VALUES (?, ?, ?, ?, ?)";
+            $enroll_sql = "INSERT INTO enrollments (student_id, course_id, assigned_to_user_id, pipeline_stage_id, total_fee_agreed, academy_id) VALUES (?, ?, ?, ?, ?, ?)";
             $enroll_stmt = $pdo->prepare($enroll_sql);
-            $enroll_stmt->execute([$new_id, $course_id, $assigned_user_id, $first_stage_id, $course_fee]);
+            $enroll_stmt->execute([$new_id, $course_id, $assigned_user_id, $first_stage_id, $course_fee, $academy_id]);
 
             $success_count++;
 

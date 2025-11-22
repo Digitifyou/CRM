@@ -4,10 +4,9 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config.php';
 
-// --- 1. Simple Google Auth Helper Class (No Composer needed) ---
+// --- 1. Simple Google Auth Helper Class ---
 class SimpleGoogleAuth {
     private $credentials;
-    private $token;
 
     public function __construct($credentialsPath) {
         if (!file_exists($credentialsPath)) {
@@ -49,11 +48,14 @@ class SimpleGoogleAuth {
         ]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            throw new Exception('Curl error: ' . curl_error($ch));
+        }
         curl_close($ch);
 
         $data = json_decode($response, true);
         if (isset($data['error'])) {
-            throw new Exception("Google Auth Error: " . $data['error_description']);
+            throw new Exception("Google Auth Error: " . ($data['error_description'] ?? $data['error']));
         }
 
         return $data['access_token'];
@@ -76,6 +78,8 @@ if ($method !== 'POST') {
 try {
     $input = json_decode(file_get_contents('php://input'), true);
     $sheetUrl = $input['sheet_url'] ?? '';
+    $action = $input['action'] ?? 'get_data'; // 'get_sheets' or 'get_data'
+    $sheetName = $input['sheet_name'] ?? '';
 
     if (empty($sheetUrl)) {
         throw new Exception("Spreadsheet URL is required.");
@@ -92,9 +96,43 @@ try {
     $auth = new SimpleGoogleAuth(__DIR__ . '/../credentials.json');
     $accessToken = $auth->getAccessToken();
 
-    // Fetch Sheet Data (Assuming Sheet1 or first sheet, range A1:Z1000)
-    $range = 'A1:Z1000'; 
-    $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?access_token={$accessToken}";
+    // --- ACTION: GET SHEET NAMES ---
+    if ($action === 'get_sheets') {
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}?fields=sheets.properties.title&access_token={$accessToken}";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $data = json_decode($response, true);
+        
+        if (isset($data['error'])) {
+            throw new Exception("Google API Error: " . ($data['error']['message'] ?? 'Unknown error'));
+        }
+
+        $sheets = [];
+        if (!empty($data['sheets'])) {
+            foreach ($data['sheets'] as $sheet) {
+                $sheets[] = $sheet['properties']['title'];
+            }
+        }
+        
+        echo json_encode(['sheets' => $sheets]);
+        exit;
+    }
+
+    // --- ACTION: GET DATA (Default) ---
+    
+    // If sheet name provided, use it. Otherwise default to first sheet (A1:Z1000)
+    $range = 'A1:Z1000';
+    if (!empty($sheetName)) {
+        // Wrap sheet name in quotes if it contains spaces
+        $range = "'" . $sheetName . "'!A1:Z1000";
+    }
+
+    $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/" . urlencode($range) . "?access_token={$accessToken}";
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -105,25 +143,22 @@ try {
     $sheetData = json_decode($response, true);
 
     if (isset($sheetData['error'])) {
-        throw new Exception("Sheets API Error: " . $sheetData['error']['message']);
+        throw new Exception("Sheets API Error: " . ($sheetData['error']['message'] ?? 'Unknown error'));
     }
 
     if (empty($sheetData['values'])) {
-        throw new Exception("Sheet is empty.");
+        throw new Exception("Sheet is empty or range not found.");
     }
 
-    // --- 3. Process Data for Frontend (Same format as CSV parser) ---
+    // Process Data
     $rows = $sheetData['values'];
     $headers = array_shift($rows); // First row is headers
     $formattedData = [];
 
     foreach ($rows as $row) {
-        // Skip empty rows
         if (empty($row)) continue;
-
         $item = [];
         foreach ($headers as $index => $header) {
-            // Google API omits trailing empty cells, so use isset
             $item[$header] = isset($row[$index]) ? $row[$index] : ''; 
         }
         $formattedData[] = $item;

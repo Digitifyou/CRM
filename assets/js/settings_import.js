@@ -2,7 +2,7 @@
 
 const API_IMPORT = '/api/v1/import_leads.php';
 const API_CUSTOM_FIELDS = '/api/v1/custom_fields.php'; 
-const API_GOOGLE_SYNC = '/api/v1/google_sync.php'; // NEW: Google Sync API
+const API_GOOGLE_SYNC = '/api/v1/google_sync.php'; 
 
 // --- DOM Elements ---
 const bulkImportPane = document.getElementById('bulk-import-pane');
@@ -13,20 +13,16 @@ const loadColumnsButton = document.getElementById('load-columns-button');
 const startImportButton = document.getElementById('start-import-button');
 const mappingTableBody = document.getElementById('import-mapping-table');
 const statusAlert = document.getElementById('import-status-alert');
-const downloadSampleCsv = document.getElementById('download-sample-csv');
 
-// --- State and Cache ---
+// New Elements
+const fetchSheetsButton = document.getElementById('fetch-sheets-button');
+const sheetSelectContainer = document.getElementById('sheet-select-container');
+const sheetSelector = document.getElementById('google-sheet-selector');
+
+// --- State ---
 let crmFields = []; 
 let sheetHeaders = []; 
 let sheetData = [];   
-
-// --- Sample CSV Content ---
-const SAMPLE_CSV_CONTENT = `Full_Name,Phone,Email,Course_Interested_ID,Qualification,Work_Experience,Custom_Field_Example
-Arjun Sharma,9876543210,arjun.s@example.com,1,B.Tech,Fresher,Looking for high-paying job
-Priya Patel,9988776655,priya.p@example.com,2,MBA,2-5 Years,Wants evening classes
-Vishal Singh,9000011111,vishal.s@example.com,1,BSc,5+ Years,Needs payment plan
-`;
-
 
 /**
  * Helper to fetch all CRM fields for the mapping dropdown.
@@ -56,6 +52,58 @@ async function fetchAllCrmFields() {
         }
     } catch (e) {
         console.error('Could not fetch CRM custom fields.', e);
+    }
+}
+
+/**
+ * Fetches the list of sheets from the provided Google Sheet URL
+ */
+async function handleFetchSheets() {
+    const sheetUrl = googleSheetLinkInput.value.trim();
+    if (!sheetUrl) {
+        alert("Please enter a Google Sheet URL first.");
+        return;
+    }
+
+    fetchSheetsButton.disabled = true;
+    fetchSheetsButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+    sheetSelectContainer.classList.add('d-none');
+    sheetSelector.innerHTML = '<option value="">-- Select a Sheet --</option>';
+
+    try {
+        const response = await fetch(API_GOOGLE_SYNC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                sheet_url: sheetUrl,
+                action: 'get_sheets' 
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to fetch sheets.');
+        }
+
+        if (result.sheets && result.sheets.length > 0) {
+            result.sheets.forEach(sheetName => {
+                const option = document.createElement('option');
+                option.value = sheetName;
+                option.textContent = sheetName;
+                sheetSelector.appendChild(option);
+            });
+            sheetSelectContainer.classList.remove('d-none');
+        } else {
+            alert("No sheets found in this spreadsheet.");
+        }
+
+    } catch (error) {
+        console.error('Sheet Fetch Error:', error);
+        alert("Error fetching sheets: " + error.message);
+    } finally {
+        fetchSheetsButton.disabled = false;
+        fetchSheetsButton.innerHTML = '<i class="bi bi-search"></i> Get Sheets';
     }
 }
 
@@ -101,6 +149,7 @@ async function handleLoadColumns() {
         // 2. Determine Source
         const file = fileUploadInput.files[0];
         const sheetUrl = googleSheetLinkInput.value.trim();
+        const selectedSheet = sheetSelector.value; // Get selected sheet name
 
         if (file) {
             // --- OPTION A: CSV FILE ---
@@ -116,13 +165,23 @@ async function handleLoadColumns() {
             sheetData = parsed.data;
 
         } else if (sheetUrl) {
-            // --- OPTION B: GOOGLE SHEET (New Logic) ---
+            // --- OPTION B: GOOGLE SHEET ---
             statusAlert.innerHTML = '<i class="bi bi-cloud-arrow-down"></i> Connecting to Google...';
             
+            const payload = { 
+                sheet_url: sheetUrl,
+                action: 'get_data'
+            };
+            
+            // Only add sheet_name if user actually selected one
+            if (selectedSheet) {
+                payload.sheet_name = selectedSheet;
+            }
+
             const response = await fetch(API_GOOGLE_SYNC, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sheet_url: sheetUrl })
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
@@ -279,6 +338,8 @@ async function handleBulkImport(event) {
         fileUploadInput.value = '';
         mappingTableBody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">Import finished.</td></tr>';
         startImportButton.disabled = true;
+        // Hide sheet selector again
+        if(sheetSelectContainer) sheetSelectContainer.classList.add('d-none');
 
     } catch (error) {
         console.error('Import Error:', error);
@@ -288,25 +349,11 @@ async function handleBulkImport(event) {
     }
 }
 
-function handleDownloadSample() {
-    const filename = 'sample_leads_import.csv';
-    const blob = new Blob([SAMPLE_CSV_CONTENT], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchAllCrmFields();
     
-    loadColumnsButton.addEventListener('click', handleLoadColumns);
+    if (loadColumnsButton) loadColumnsButton.addEventListener('click', handleLoadColumns);
     if (importForm) importForm.addEventListener('submit', handleBulkImport);
-    if (downloadSampleCsv) downloadSampleCsv.addEventListener('click', handleDownloadSample);
+    if (fetchSheetsButton) fetchSheetsButton.addEventListener('click', handleFetchSheets);
 });
