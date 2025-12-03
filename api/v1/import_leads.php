@@ -71,8 +71,11 @@ try {
         }
         $lead['custom_data'] = $custom_data;
         
-        if (empty($lead['full_name']) || empty($lead['phone'])) {
-            $error_details[] = ['row' => $row_index + 1, 'error' => 'Missing required Name or Phone.'];
+        // --- MODIFIED MANDATORY FIELD CHECK ---
+        // Changed from: if (empty($lead['full_name']) || empty($lead['phone'])) 
+        // To: only check for full_name as required by the user
+        if (empty($lead['full_name'])) {
+            $error_details[] = ['row' => $row_index + 1, 'error' => 'Missing required Name.'];
             continue;
         }
 

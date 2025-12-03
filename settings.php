@@ -94,26 +94,7 @@ require_once 'header.php';
                 <div class="tab-pane fade" id="integrations-pane" role="tabpanel">
                     <h3 class="mb-4">Lead Capture Integrations</h3>
 
-                    <div class="card mb-3 border-success">
-                        <div class="card-header bg-success text-white"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Google Sheets Integration</div>
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i> Active</span>
-                                <span class="text-muted small">Service Account Key is installed.</span>
-                            </div>
-                            <h5>How to Import from Private Sheets</h5>
-                            <ol class="text-muted small" style="line-height: 1.8;">
-                                <li class="mb-2"><strong>Share the Sheet:</strong> Add this email as a <strong>Viewer</strong>:<br>
-                                    <div class="input-group input-group-sm mt-1" style="max-width: 550px;">
-                                        <span class="input-group-text bg-light">Service Email</span>
-                                        <input type="text" class="form-control bg-white text-dark" value="flowsystmz-crm@digitifyu-401012.iam.gserviceaccount.com" readonly id="service-email-input">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('service-email-input').value)"><i class="bi bi-clipboard"></i> Copy</button>
-                                    </div>
-                                </li>
-                                <li><strong>Import:</strong> Go to the <strong>Bulk Import</strong> tab, paste URL, click "Get Sheets" to select a tab, then "Load Columns".</li>
-                            </ol>
-                        </div>
-                    </div>
+                    
 
                     <div class="card mb-3" data-platform="meta">
                         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -143,7 +124,28 @@ require_once 'header.php';
                     <h3 class="mb-4">Bulk Import Leads</h3>
                     <div class="card mb-3">
                         <div class="card-body">
+                            <div class="card mb-3 border-success">
+                        <div class="card-header bg-success text-white"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Google Sheets Integration</div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-success me-2"><i class="bi bi-check-circle"></i> Active</span>
+                                <span class="text-muted small">Service Account Key is installed.</span>
+                            </div>
+                            <h5>How to Import from Private Sheets</h5>
+                            <ol class="text-muted small" style="line-height: 1.8;">
+                                <li class="mb-2"><strong>Share the Sheet:</strong> Add this email as a <strong>Viewer</strong>:<br>
+                                    <div class="input-group input-group-sm mt-1" style="max-width: 550px;">
+                                        <span class="input-group-text bg-light">Service Email</span>
+                                        <input type="text" class="form-control bg-white text-dark" value="flowsystmz-crm@digitifyu-401012.iam.gserviceaccount.com" readonly id="service-email-input">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('service-email-input').value)"><i class="bi bi-clipboard"></i> Copy</button>
+                                    </div>
+                                </li>
+                                <li><strong>Import:</strong> paste URL, click "Get Sheets" to select a tab, then "Load Columns".</li>
+                            </ol>
+                        </div>
+                    </div>
                             <h5 class="card-title">Source</h5>
+                            
                             <form id="bulk-import-form">
                                 <div class="mb-3">
                                     <label class="form-label">Google Sheet URL or Upload CSV</label>
@@ -191,13 +193,13 @@ require_once 'header.php';
 <div class="modal fade" id="addUserModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Invite User</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-user-form"><div class="modal-body"><input class="form-control mb-3" id="user_full_name" name="full_name" placeholder="Full Name" required><input class="form-control mb-3" id="username" name="username" placeholder="Username" required><input type="password" class="form-control mb-3" id="password" name="password" placeholder="Password" required><select class="form-select" id="role" name="role"><option value="counselor">Counselor</option><option value="admin">Admin</option></select></div><div class="modal-footer"><button type="submit" class="btn btn-primary">Invite</button></div></form></div></div></div>
 <div class="modal fade" id="addCustomFieldModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Define New Lead Field</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><form id="add-custom-field-form"><input type="hidden" name="field_id" id="field_id_input"><input type="hidden" name="scoring_rules_json_hidden" id="scoring_rules_json_hidden"><div class="modal-body"><div class="mb-3"><label class="form-label">Display Name</label><input type="text" class="form-control" id="field_name" name="field_name" required></div><div class="mb-3"><label class="form-label">Database Key</label><input type="text" class="form-control" id="field_key" name="field_key" placeholder="e.g. expected_salary"></div><div class="mb-3"><label class="form-label">Type</label><select class="form-select" id="field_type" name="field_type" required onchange="toggleFieldSections()"><option value="text">Text</option><option value="number">Number</option><option value="select">Dropdown</option></select></div><div class="mb-3 d-none" id="field-options-group"><label class="form-label">Options (comma-separated)</label><textarea class="form-control" id="options" name="options"></textarea></div><div class="row"><div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_required" id="is_required"><label class="form-check-label">Required</label></div></div><div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" name="is_score_field" id="is_score_field"><label class="form-check-label">Lead Scoring</label></div></div></div><div class="mb-3 d-none" id="score-rules-panel"><hr><label class="form-label">Scoring Rules</label><div class="mb-2"><small class="text-success">High (100pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="High"></div><div class="mb-2"><small class="text-warning">Medium (50pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="Medium"></div><div class="mb-2"><small class="text-info">Low (25pts):</small> <input class="form-control form-control-sm score-input-rules" data-level="Low"></div></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="submit" class="btn btn-primary">Save Field</button></div></form></div></div></div>
 
-<script src="/assets/js/settings_import.js"></script>
-<script src="/assets/js/settings_integrations.js"></script>
-<script src="/assets/js/settings_courses.js"></script>
-<script src="/assets/js/settings_pipeline.js"></script>
-<script src="/assets/js/settings_users.js"></script>
-<script src="/assets/js/settings_batches.js"></script>
-<script src="/assets/js/settings_custom_fields.js"></script>
+<script src="./assets/js/settings_import.js"></script>
+<script src="./assets/js/settings_integrations.js"></script>
+<script src="./assets/js/settings_courses.js"></script>
+<script src="./assets/js/settings_pipeline.js"></script>
+<script src="./assets/js/settings_users.js"></script>
+<script src="./assets/js/settings_batches.js"></script>
+<script src="./assets/js/settings_custom_fields.js"></script>
 
 <script>
     window.META_APP_ID = '1170946974995892'; 

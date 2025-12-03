@@ -163,9 +163,7 @@ async function deleteStudent(id) {
     }
 }
 
-/**
- * Filters students
- */
+
 function handleSearch() {
     const searchTerm = searchBar.value.toLowerCase();
 

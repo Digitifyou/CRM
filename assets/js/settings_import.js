@@ -29,9 +29,10 @@ let sheetData = [];
  */
 async function fetchAllCrmFields() {
     crmFields = [
+        // ONLY FULL NAME is marked (REQUIRED) for visual guidance
         { key: 'full_name', name: 'Full Name (REQUIRED)', is_built_in: true },
-        { key: 'phone', name: 'Phone Number (REQUIRED)', is_built_in: true },
-        { key: 'email', name: 'Email Address', is_built_in: true },
+        { key: 'phone', name: 'Phone Number', is_built_in: true }, // Not required
+        { key: 'email', name: 'Email Address', is_built_in: true }, // Not required
         { key: 'course_interested_id', name: 'Course Interested ID', is_built_in: true },
         { key: 'lead_source', name: 'Lead Source', is_built_in: true },
         { key: 'qualification', name: 'Qualification', is_built_in: true },
@@ -43,9 +44,11 @@ async function fetchAllCrmFields() {
         if (customResponse.ok) {
             const customFields = await customResponse.json();
             customFields.forEach(field => {
+                // Ensure custom fields do not have (REQUIRED) added
+                let fieldName = field.field_name.replace(/\s*\(REQUIRED\)/i, ''); 
                 crmFields.push({
                     key: field.field_key,
-                    name: `${field.field_name} (Custom)`,
+                    name: `${fieldName} (Custom)`,
                     is_built_in: false
                 });
             });
@@ -277,23 +280,23 @@ async function handleBulkImport(event) {
     const selects = mappingTableBody.querySelectorAll('.mapping-select');
     
     let hasName = false;
-    let hasPhone = false;
 
     selects.forEach(select => {
         const sourceHeader = select.name;
-        const crmFieldKey = select.value;
+        const crm_field_key = select.value;
         
-        if (crmFieldKey) {
-            fieldMapping[sourceHeader] = crmFieldKey;
-            if (crmFieldKey === 'full_name') hasName = true;
-            if (crmFieldKey === 'phone') hasPhone = true;
+        if (crm_field_key) {
+            fieldMapping[sourceHeader] = crm_field_key;
+            // CHECK ONLY FOR FULL NAME
+            if (crm_field_key === 'full_name') hasName = true;
         }
     });
     
-    if (!hasName || !hasPhone) {
+    // Check for MANDATORY FIELDS
+    if (!hasName) { // NEW CHECK: Only Full Name is Mandatory
         statusAlert.classList.remove('alert-success', 'alert-info');
         statusAlert.classList.add('alert-danger');
-        statusAlert.innerHTML = '<i class="bi bi-exclamation-triangle"></i> You must map <strong>Full Name</strong> and <strong>Phone Number</strong>.';
+        statusAlert.innerHTML = '<i class="bi bi-exclamation-triangle"></i> You must map <strong>Full Name</strong> to proceed with the import.';
         startImportButton.disabled = false;
         return;
     }

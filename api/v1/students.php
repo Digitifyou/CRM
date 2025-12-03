@@ -3,7 +3,6 @@
 
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config.php'; 
-// FIXED: Use helper
 require_once __DIR__ . '/helpers/scoring_helper.php'; 
 
 if (!defined('ACADEMY_ID')) {
@@ -47,17 +46,25 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             if (empty($data['full_name']) || empty($data['phone'])) { http_response_code(400); echo json_encode(['error' => 'Name/Phone required']); exit; }
             
+            // FIXED: Convert empty email string to NULL to prevent Unique Constraint errors
+            $email_val = !empty($data['email']) ? $data['email'] : null;
+
             $sql = "INSERT INTO students (full_name, email, phone, status, course_interested_id, lead_source, qualification, work_experience, custom_data, academy_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-                $data['full_name'], $data['email'] ?? null, $data['phone'], 'inquiry',
-                $data['course_interested_id'] ?: null, $data['lead_source'], 
-                $data['qualification'], $data['work_experience'], 
-                json_encode($data['custom_data'] ?? []), $academy_id
+                $data['full_name'], 
+                $email_val, 
+                $data['phone'], 
+                'inquiry',
+                $data['course_interested_id'] ?: null, 
+                $data['lead_source'] ?? null, 
+                $data['qualification'] ?? null, 
+                $data['work_experience'] ?? null, 
+                json_encode($data['custom_data'] ?? []), 
+                $academy_id
             ]);
             $new_id = $pdo->lastInsertId();
             
-            // FIXED: Use helper function
             calculateLeadScore($pdo, $new_id, $academy_id, $data);
             
             // Auto Enrollment
@@ -93,7 +100,13 @@ try {
             
             $updates = []; $params = [];
             if (isset($data['full_name'])) { $updates[] = 'full_name = ?'; $params[] = $data['full_name']; }
-            if (isset($data['email'])) { $updates[] = 'email = ?'; $params[] = $data['email']; }
+            
+            // FIXED: Convert empty email string to NULL on update too
+            if (isset($data['email'])) { 
+                $updates[] = 'email = ?'; 
+                $params[] = !empty($data['email']) ? $data['email'] : null; 
+            }
+            
             if (isset($data['phone'])) { $updates[] = 'phone = ?'; $params[] = $data['phone']; }
             if (isset($data['status'])) { $updates[] = 'status = ?'; $params[] = $data['status']; }
             if (isset($data['course_interested_id'])) { $updates[] = 'course_interested_id = ?'; $params[] = $data['course_interested_id'] ?: null; }
@@ -111,7 +124,6 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            // FIXED: Use helper function
             calculateLeadScore($pdo, $id, $academy_id, $data);
             echo json_encode(['message' => 'Updated']);
             break;
